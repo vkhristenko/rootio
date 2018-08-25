@@ -89,6 +89,11 @@ void ctor_key(struct PKey *pkey);
 void dtor_key(struct PKey *pkey);
 void from_buf_key(char **buffer, struct PKey *pkey);
 
+struct KeyList {
+    int size;
+    struct PKey *pkeys;
+};
+
 //
 // directory product
 //
@@ -109,16 +114,28 @@ void dtor_dir(struct PDirectory *pdir);
 void print_dir(struct PDirectory *pdir);
 void from_buf_dir(char **buffer, struct PDirectory *pdir);
 
+struct TopDirectory {
+    struct PFileHeader header;
+    struct PDirectory dir;
+};
+
 //
-// Bootstrapping logic / functionality
+// Bootstrapping logic / functionality passing style
 //
+void get_top_dir(struct FileContext ctx, struct PDirectory *pdir);
 void list_keys(struct FileContext ctx, struct PDirectory *pdir, 
                struct PKey ** pkeys, int *pnkeys);
-void get_top_dir(struct FileContext ctx, struct PDirectory *pdir);
 void get_blob(struct FileContext ctx, struct PKey *pkey, char **blob);
 void dump_contents(struct FileContext ctx);
 
 struct FileContext open_context(char*, char*);
 void close_context(struct FileContext);
+
+//
+// Bootstrapping logic / functionality return style
+//
+struct TopDirectory read_top_dir(struct FileContext);
+char* read_blob(struct FileContext, struct PKey const*);
+struct KeyList read_keys(struct FileContext, struct PDirectory const*);
 
 #endif // bootstrap_h

@@ -1,6 +1,7 @@
 sources = $(wildcard *.c)
 objects = $(sources:.c=.o)
 includedirs = -I$(shell pwd)
+libs = -lz
 os = $(shell uname)
 topdir = $(shell pwd)
 extension = so
@@ -17,13 +18,14 @@ export lib
 export libname
 export topdir
 export includedirs
+export libs
 
 .PHONY: tests clean
 
 all: $(lib) tests
 
 $(lib): $(objects)
-	$(cc) $(ldflags) -o $@ $^
+	$(cc) $(ldflags) -o $@ $^ $(libs)
 
 $.o: %.c
 	$(cc) $(cflags) -c -o $@ $^

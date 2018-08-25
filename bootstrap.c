@@ -65,33 +65,36 @@ void ctor_file_header(struct PFileHeader *pheader) {}
 void dtor_file_header(struct PFileHeader *pheader) {}
 
 void from_buf_file_header(char **buffer, struct PFileHeader *pheader) {
-    printf("builing a file header\n");
-
     if (strncmp(*buffer, "root", 4)) {
         printf("not a root file\n");
         assert(0);
     }
     *buffer+=4;
-    dump_raw(*buffer, 100, 20);
-
+    
     pheader->version = get_u32(buffer);
-    printf("version = %d\n", pheader->version);
-    dump_raw(*buffer, 100, 20);
-
     pheader->begin = get_u32(buffer);
-    printf("begin = %d\n", pheader->begin);
-
-    if (pheader->version > 1000000u) {
+    int is_large_file = pheader->version > 1000000u;
+    if (is_large_file) {
         pheader->end = get_u64(buffer);
         pheader->seek_free = get_u64(buffer);
+        pheader->nbytes_free = get_u32(buffer);
+        pheader->nfree = get_u32(buffer);
+        pheader->nbytes_name = get_u32(buffer);
+        pheader->units = **buffer; (*buffer)++; // manually change the buffer pointer
+        pheader->compress = get_u32(buffer);
+        pheader->seek_info = get_u64(buffer);
+        pheader->nbytes_info = get_u32(buffer);
+    } else {
+        pheader->end = get_u32(buffer);
+        pheader->seek_free = get_u32(buffer);
+        pheader->nbytes_free = get_u32(buffer);
+        pheader->nfree = get_u32(buffer);
+        pheader->nbytes_name = get_u32(buffer);
+        pheader->units = **buffer; (*buffer)++; // manually change the buffer pointer
+        pheader->compress = get_u32(buffer);
+        pheader->seek_info = get_u32(buffer);
+        pheader->nbytes_info = get_u32(buffer);
     }
-    pheader->nbytes_free = get_u32(buffer);
-    pheader->nfree = get_u32(buffer);
-    pheader->nbytes_name = get_u32(buffer);
-    pheader->units = **buffer; (*buffer)++; // manually change the buffer pointer
-    pheader->compress = get_u32(buffer);
-    pheader->seek_info = get_u64(buffer);
-    pheader->nbytes_info = get_u32(buffer);
 }
 
 //
@@ -281,4 +284,71 @@ struct FileContext open_context(char* filename, char *opts) {
 
 void close_context(struct FileContext ctx) {
     fclose(ctx.pfile);
+}
+
+struct TopDirectory read_top_dir(struct FileContext ctx) {
+    struct TopDirectory root;
+
+    // initial buffer of 300bytes is a safe assumption
+    char *buffer = malloc(300);
+    size_t nbytes = fread((void*)buffer, 1, 300, ctx.pfile);
+    char *start = buffer;
+
+    // get the file header
+    ctor_file_header(&root.header);
+    from_buf_file_header(&buffer, &root.header);
+
+    // top dir key
+    start+=100;
+    struct PKey key;
+    ctor_key(&key);
+    from_buf_key(&start, &key);
+
+    // get named stuff
+    struct PNamed named;
+    ctor_named(&named);
+    from_buf_named(&start, &named);
+
+    // dir
+    from_buf_dir(&start, &root.dir);
+
+    return root;
+}
+
+char* read_blob(struct FileContext ctx, struct PKey const *pkey) {
+    char *blob = malloc(pkey->total_bytes);
+
+    // read in the allocated blob
+    fseek(ctx.pfile, pkey->seek_key, SEEK_SET);
+    size_t nbytes = fread(blob, 1, pkey->total_bytes, ctx.pfile);
+
+    return blob;
+}
+
+struct KeyList read_keys(struct FileContext ctx, struct PDirectory const* pdir) {
+    struct KeyList klist;
+
+    // read into the buffer
+    char *buffer = malloc(pdir->nbytes_keys);
+    fseek(ctx.pfile, pdir->seek_keys, SEEK_SET);
+    size_t nbytes = fread((void*)buffer, 1, pdir->nbytes_keys, ctx.pfile);
+
+    // tlist key
+    struct PKey key;
+    ctor_key(&key);
+    from_buf_key(&buffer, &key);
+    
+    // get how many keys we have and allocate enough space on heap
+    klist.size = get_u32(&buffer);
+    klist.pkeys = malloc(sizeof(struct PKey)*(klist.size));
+
+    // iterate, construct, cast from from the in-memory buffer
+    for (int i=0; i<(klist.size); i++) {
+        // construct the i-th key in the allocate space
+        ctor_key(&((klist.pkeys)[i]));
+        // cast 
+        from_buf_key(&buffer, &((klist.pkeys)[i]));
+    }
+
+    return klist;
 }
