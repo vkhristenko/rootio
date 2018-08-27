@@ -9,6 +9,10 @@ void from_buf_datime(char **buffer, struct PDatime *pdatime) {
     pdatime->raw = get_u32(buffer);
 }
 
+void to_buf_datime(char **buffer, struct PDatime *pdatime) {
+    put_u32(buffer, pdatime->raw);
+}
+
 void ctor_datime(struct PDatime *pdatime) {}
 
 void dtor_datime(struct PDatime *pdatime) {}
@@ -32,6 +36,11 @@ void print_named(struct PNamed *pnamed) {
 void from_buf_named(char **buffer, struct PNamed *pnamed) {
     get_string(buffer, &pnamed->name);
     get_string(buffer, &pnamed->title);
+}
+
+void to_buf_named(char **buffer, struct PNamed *pnamed) {
+    put_string(buffer, pnamed->name);
+    put_string(buffer, pnamed->title);
 }
 
 void ctor_named(struct PNamed *pnamed) {}
@@ -97,6 +106,33 @@ void from_buf_file_header(char **buffer, struct PFileHeader *pheader) {
     }
 }
 
+void to_buf_file_header(char **buffer, struct PFileHeader *pheader) {
+    put_u32(buffer, pheader->version);
+    put_u32(buffer, pheader->begin);
+    int is_large_file = pheader->version > 1000000u;
+    if (is_large_file) {
+        put_u64(buffer, pheader->end);
+        put_u64(buffer, pheader->seek_free);
+        put_u32(buffer, pheader->nbytes_free);
+        put_u32(buffer, pheader->nfree);
+        put_u32(buffer, pheader->nbytes_name);
+        **buffer = pheader->units; (*buffer)++;
+        put_u32(buffer, pheader->compress);
+        put_u64(buffer, pheader->seek_info);
+        put_u32(buffer, pheader->nbytes_info);
+    } else {
+        put_u32(buffer, (uint32_t)pheader->end);
+        put_u32(buffer, (uint32_t)pheader->seek_free);
+        put_u32(buffer, pheader->nbytes_free);
+        put_u32(buffer, pheader->nfree);
+        put_u32(buffer, pheader->nbytes_name);
+        **buffer = pheader->units; (*buffer)++;
+        put_u32(buffer, pheader->compress);
+        put_u32(buffer, (uint32_t)pheader->seek_info);
+        put_u32(buffer, pheader->nbytes_info);
+    }
+}
+
 //
 // key product
 //
@@ -143,6 +179,26 @@ void from_buf_key(char **buffer, struct PKey *pkey) {
     get_string(buffer, &(pkey->obj_title));
 }
 
+void to_buf_key(char **buffer, struct PKey *pkey) {
+    put_u32(buffer, pkey->total_bytes);
+    put_version(buffer, pkey->version);
+    put_u32(buffer, pkey->obj_bytes);
+    to_buf_datime(buffer, &(pkey->date_time));
+    put_u16(buffer, pkey->key_bytes);
+    put_u16(buffer, pkey->cycle);
+    if (pkey->version > 1000) {
+        put_u64(buffer, pkey->seek_key);
+        put_u64(buffer, pkey->seek_pdir);
+    } else {
+        put_u32(buffer, (uint32_t)pkey->seek_key);
+        put_u32(buffer, (uint32_t)pkey->seek_pdir);
+    }
+
+    put_string(buffer, pkey->class_name);
+    put_string(buffer, pkey->obj_name);
+    put_string(buffer, pkey->obj_title);
+}
+
 //
 // directory product
 //
@@ -177,6 +233,23 @@ void from_buf_dir(char **buffer, struct PDirectory *pdir) {
         pdir->seek_dir = get_u32(buffer);
         pdir->seek_parent = get_u32(buffer);
         pdir->seek_keys = get_u32(buffer);
+    }
+}
+
+void to_buf_dir(char **buffer, struct PDirectory *pdir) {
+    put_version(buffer, pdir->version);
+    to_buf_datime(buffer, &(pdir->date_time_c));
+    to_buf_datime(buffer, &(pdir->date_time_m));
+    put_u32(buffer, pdir->nbytes_keys);
+    put_u32(buffer, pdir->nbytes_name);
+    if (pdir->version > 1000) {
+        put_u64(buffer, pdir->seek_dir);
+        put_u64(buffer, pdir->seek_parent);
+        put_u64(buffer, pdir->seek_keys);
+    } else {
+        put_u32(buffer, (uint32_t)pdir->seek_dir);
+        put_u32(buffer, (uint32_t)pdir->seek_parent);
+        put_u32(buffer, (uint32_t)pdir->seek_keys);
     }
 }
 
@@ -351,4 +424,25 @@ struct KeyList read_keys(struct FileContext ctx, struct PDirectory const* pdir) 
     }
 
     return klist;
+}
+
+void root_reserve(struct FileContext ctx, int size) {
+    char *buf = malloc(size);
+    fwrite((void*)buf, 1, size, ctx.pfile);
+}
+
+void root_reserve_at_location(struct FileContext ctx, long location, int size) {
+    fseek(ctx.pfile, location, SEEK_SET);
+
+    char *buf = malloc(size);
+    fwrite((void*)buf, 1, size, ctx.pfile);
+}
+
+void root_write(struct FileContext ctx, char *buf, int size) { 
+    fwrite((void*)buf, 1, size, ctx.pfile);
+}
+
+void root_write_at_location(struct FileContext ctx, long location, char *buf, int size) {
+    fseek(ctx.pfile, location, SEEK_SET);
+    fwrite((void*)buf, 1, size, ctx.pfile);
 }

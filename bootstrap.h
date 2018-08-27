@@ -26,6 +26,7 @@ struct PDatime {
 
 void print_datime(struct PDatime *pdatime);
 void from_buf_datime(char **buffer, struct PDatime *pdatime);
+void to_buf_datime(char **buffer, struct PDatime *pdatime);
 void ctor_datime(struct PDatime *pdatime);
 void dtor_datime(struct PDatime *pdatime);
 
@@ -40,6 +41,7 @@ struct PNamed {
 
 void print_named(struct PNamed *pnamed);
 void from_buf_named(char **buffer, struct PNamed *pnamed);
+void to_buf_named(char **buffer, struct PNamed *pnamed);
 void ctor_named(struct PNamed *pnamed);
 void dtor_named(struct PNamed *pnamed);
 
@@ -65,6 +67,7 @@ void print_file_header(struct PFileHeader *pheader);
 void ctor_file_header(struct PFileHeader *pheader);
 void dtor_file_header(struct PFileHeader *pheader);
 void from_buf_file_header(char **buffer, struct PFileHeader *pheader);
+void to_buf_file_header(char **buffer, struct PFileHeader *pheader);
 
 //
 // key product
@@ -88,6 +91,7 @@ void print_key(struct PKey *pkey);
 void ctor_key(struct PKey *pkey);
 void dtor_key(struct PKey *pkey);
 void from_buf_key(char **buffer, struct PKey *pkey);
+void to_buf_key(char **buffer, struct PKey*);
 
 struct KeyList {
     int size;
@@ -113,6 +117,7 @@ void ctor_dir(struct PDirectory *pdir);
 void dtor_dir(struct PDirectory *pdir);
 void print_dir(struct PDirectory *pdir);
 void from_buf_dir(char **buffer, struct PDirectory *pdir);
+void to_buf_dir(char **buffer, struct PDirectory *pdir);
 
 struct TopDirectory {
     struct PFileHeader header;
@@ -137,5 +142,10 @@ void close_context(struct FileContext);
 struct TopDirectory read_top_dir(struct FileContext);
 char* read_blob(struct FileContext, struct PKey const*);
 struct KeyList read_keys(struct FileContext, struct PDirectory const*);
+
+void root_reserve_at_location(struct FileContext, long location, int size);
+void root_reserve(struct FileContext, int size);
+void root_write(struct FileContext, char*, int);
+void root_write_at_location(struct FileContext, long, char*, int);
 
 #endif // bootstrap_h
