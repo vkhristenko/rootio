@@ -40,6 +40,6 @@ void dump_raw(char *buf, int size, int nbytes_per_row);
     printf(#value" = %hu\n", value)
 
 #define print_string(value) \
-    printf(#value" = %s\n", value);
+    printf(#value" = %s\n", value)
 
 #endif // debug_h

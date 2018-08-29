@@ -11,6 +11,17 @@ struct FileContext {
     FILE *pfile;
 };
 
+struct PString {
+    int size;
+    char *str;
+};
+
+void print_pstring(struct PString*);
+void from_buf_pstring(char **buffer, struct PString* pstring);
+void to_buf_pstring(char **buffer, struct PString const* pstring);
+void ctor_pstring(struct PString*);
+void dtor_pstring(struct PString*);
+
 //
 // PObject
 //
@@ -35,8 +46,8 @@ void dtor_datime(struct PDatime *pdatime);
 //
 struct PNamed {
     struct PObject object;
-    char *name;
-    char *title;
+    struct PString name;
+    struct PString title;
 };
 
 void print_named(struct PNamed *pnamed);
@@ -82,9 +93,9 @@ struct PKey {
     uint16_t cycle;
     uint64_t seek_key;
     uint64_t seek_pdir;
-    char *class_name;
-    char *obj_name;
-    char *obj_title;
+    struct PString class_name;
+    struct PString obj_name;
+    struct PString obj_title;
 };
 
 void print_key(struct PKey *pkey);
@@ -119,6 +130,13 @@ void print_dir(struct PDirectory *pdir);
 void from_buf_dir(char **buffer, struct PDirectory *pdir);
 void to_buf_dir(char **buffer, struct PDirectory *pdir);
 
+struct TopDirectory_v2 {
+    struct PFileHeader header;
+    struct PKey key;
+    struct PNamed named;
+    struct PDirectory dir;
+};
+
 struct TopDirectory {
     struct PFileHeader header;
     struct PDirectory dir;
@@ -140,6 +158,7 @@ void close_context(struct FileContext);
 // Bootstrapping logic / functionality return style
 //
 struct TopDirectory read_top_dir(struct FileContext);
+struct TopDirectory_v2 read_top_dir_v2(struct FileContext);
 char* read_blob(struct FileContext, struct PKey const*);
 struct KeyList read_keys(struct FileContext, struct PDirectory const*);
 

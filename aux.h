@@ -27,7 +27,7 @@ int64_t get_i64(char **ptr);
 double get_f64(char **ptr);
 float get_f32(char **ptr);
 uint32_t get_version(char **ptr);
-void get_string(char **src, char **dest);
+int get_string(char **src, char **dest);
 
 void put_u16(char **ptr, uint16_t);
 void put_u32(char **ptr, uint32_t);
@@ -36,7 +36,7 @@ void put_i16(char **ptr, int16_t);
 void put_i32(char **ptr, int32_t);
 void put_i64(char **ptr, int64_t);
 void put_version(char **ptr, uint16_t);
-void put_string(char **ptr, char const*);
+void put_string(char **ptr, char const*, int);
 
 // 
 // bdebug stuff

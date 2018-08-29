@@ -113,14 +113,14 @@ void put_version(char **ptr, uint16_t version) {
     put_u16(ptr, version);
 }
 
-void get_string(char **src, char **dest) {
+int get_string(char **src, char **dest) {
     int8_t size = **src; (*src)++;
 
     // If the string is empty
     if (size == 0) {
         (*dest) = malloc(1);
         (*dest)[0] = '\0';
-        return;
+        return 0;
     }
     
     // if more input is needed
@@ -129,17 +129,18 @@ void get_string(char **src, char **dest) {
         (*dest) = malloc(size);
         memcpy(*dest, *src, size);
         src+=size;
-        return;
+        return size;
     }
 
     // allocate size bytes and perform mem copy
     (*dest) = malloc(size);
     memcpy(*dest, *src, size);
     *src+=size;
+
+    return size;
 }
 
-void put_string(char **pbuf, char const* str) {
-    int size = strlen(str);
+void put_string(char **pbuf, char const* str, int size) {
     if (size < 255) {
         **pbuf = (char) size;
         (*pbuf)++;

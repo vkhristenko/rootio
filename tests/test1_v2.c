@@ -57,8 +57,12 @@ int main(int argc, char** argv) {
 
     struct FileContext ctx = open_context(filename, "rb");
 
-    struct TopDirectory root = read_top_dir(ctx);
+    struct TopDirectory_v2 root = read_top_dir_v2(ctx);
     print_file_header(&root.header);
+    printf("\n");
+    print_key(&root.key);
+    printf("\n");
+    print_named(&root.named);
     printf("\n");
     print_dir(&root.dir);
     printf("\n");

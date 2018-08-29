@@ -3,6 +3,30 @@
 #include "debug.h"
 
 //
+// pstring
+//
+void print_pstring(struct PString* ppstr) {
+    printf("Product <PString:>\n");
+    printf("--------------------\n");
+    printf("size = %d\n", ppstr->size);
+    print_string(ppstr->str);
+}
+
+void from_buf_pstring(char **buffer, struct PString *ppstr) {
+    ppstr->size = get_string(buffer, &ppstr->str);
+}
+
+void to_buf_pstring(char **buffer, struct PString const* ppstr) {
+    put_string(buffer, ppstr->str, ppstr->size);
+}
+
+void ctor_pstring(struct PString *ppstr) {}
+
+void dtor_pstring(struct PString *ppstr) {
+    free(ppstr->str);
+}
+
+//
 // PDatime
 //
 void from_buf_datime(char **buffer, struct PDatime *pdatime) {
@@ -23,31 +47,34 @@ void print_datime(struct PDatime *pdatime) {
     print_u32(pdatime->raw);
 }
 
+uint32_t sizeof_datime(struct PDatime *pdatime) {
+    return 4;
+}
 //
 // PNamed
 //
 void print_named(struct PNamed *pnamed) {
     printf("Product <PNamed>:\n");
     printf("-------------------\n");
-    print_string(pnamed->name);
-    print_string(pnamed->title);
+    print_pstring(&pnamed->name);
+    print_pstring(&pnamed->title);
 }
 
 void from_buf_named(char **buffer, struct PNamed *pnamed) {
-    get_string(buffer, &pnamed->name);
-    get_string(buffer, &pnamed->title);
+    from_buf_pstring(buffer, &pnamed->name);
+    from_buf_pstring(buffer, &pnamed->title);
 }
 
 void to_buf_named(char **buffer, struct PNamed *pnamed) {
-    put_string(buffer, pnamed->name);
-    put_string(buffer, pnamed->title);
+    to_buf_pstring(buffer, &pnamed->name);
+    to_buf_pstring(buffer, &pnamed->title);
 }
 
 void ctor_named(struct PNamed *pnamed) {}
 
 void dtor_named(struct PNamed *pnamed) {
-    free(pnamed->name);
-    free(pnamed->title);
+    dtor_pstring(&pnamed->name);
+    dtor_pstring(&pnamed->title);
 }
 
 //
@@ -147,17 +174,17 @@ void print_key(struct PKey *pkey) {
     print_u16(pkey->cycle);
     print_u64(pkey->seek_key);
     print_u64(pkey->seek_pdir);
-    print_string(pkey->class_name);
-    print_string(pkey->obj_name);
-    print_string(pkey->obj_title);
+    print_pstring(&pkey->class_name);
+    print_pstring(&pkey->obj_name);
+    print_pstring(&pkey->obj_title);
 }
 
 void ctor_key(struct PKey *pkey) {}
 
 void dtor_key(struct PKey *pkey) {
-    free(pkey->class_name);
-    free(pkey->obj_name);
-    free(pkey->obj_title);
+    dtor_pstring(&pkey->class_name);
+    dtor_pstring(&pkey->obj_name);
+    dtor_pstring(&pkey->obj_title);
 }
 
 void from_buf_key(char **buffer, struct PKey *pkey) {
@@ -174,9 +201,9 @@ void from_buf_key(char **buffer, struct PKey *pkey) {
         pkey->seek_key = get_u32(buffer);
         pkey->seek_pdir = get_u32(buffer);
     }
-    get_string(buffer, &(pkey->class_name));
-    get_string(buffer, &(pkey->obj_name));
-    get_string(buffer, &(pkey->obj_title));
+    from_buf_pstring(buffer, &(pkey->class_name));
+    from_buf_pstring(buffer, &(pkey->obj_name));
+    from_buf_pstring(buffer, &(pkey->obj_title));
 }
 
 void to_buf_key(char **buffer, struct PKey *pkey) {
@@ -194,9 +221,9 @@ void to_buf_key(char **buffer, struct PKey *pkey) {
         put_u32(buffer, (uint32_t)pkey->seek_pdir);
     }
 
-    put_string(buffer, pkey->class_name);
-    put_string(buffer, pkey->obj_name);
-    put_string(buffer, pkey->obj_title);
+    to_buf_pstring(buffer, &pkey->class_name);
+    to_buf_pstring(buffer, &pkey->obj_name);
+    to_buf_pstring(buffer, &pkey->obj_title);
 }
 
 //
@@ -357,6 +384,33 @@ struct FileContext open_context(char* filename, char *opts) {
 
 void close_context(struct FileContext ctx) {
     fclose(ctx.pfile);
+}
+
+struct TopDirectory_v2 read_top_dir_v2(struct FileContext ctx) {
+    struct TopDirectory_v2 root;
+
+    // initial buffer of 300bytes is a safe assumption
+    char *buffer = malloc(300);
+    size_t nbytes = fread((void*)buffer, 1, 300, ctx.pfile);
+    char *start = buffer;
+
+    // get the file header
+    ctor_file_header(&root.header);
+    from_buf_file_header(&buffer, &root.header);
+
+    // top dir key
+    start+=100;
+    ctor_key(&root.key);
+    from_buf_key(&start, &root.key);
+
+    // get named stuff
+    ctor_named(&root.named);
+    from_buf_named(&start, &root.named);
+
+    // dir
+    from_buf_dir(&start, &root.dir);
+
+    return root;
 }
 
 struct TopDirectory read_top_dir(struct FileContext ctx) {

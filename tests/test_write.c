@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
     // key + top dir
     struct PKey key;
     struct PDirectory dir;
+    /*
     dir.version = 5;
     dir.date_time_c = {1111111};
     dir.date_time_m = {1111111};
@@ -48,6 +49,7 @@ int main(int argc, char** argv) {
     dir.seek_keys = 0;
 
     key.total_bytes = sizeof(PDirectory);
+    */
 
     // write the buffer
     root_write(ctx, buf_start, 300);
