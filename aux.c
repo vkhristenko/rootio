@@ -23,6 +23,12 @@ void swap_64(char *src, char *dest) {
     dest[7] = src[0];
 }
 
+uint8_t get_u8(char **ptr) {
+    uint8_t value = (uint8_t)**ptr;
+    (*ptr)++;
+    return value;
+}
+
 uint16_t get_u16(char ** ptr) {
     uint16_t value;
     swap_16(*ptr, (char*)&value);
@@ -68,6 +74,11 @@ uint64_t get_u64(char **ptr) {
     swap_64(*ptr, (char*)&value);
     *ptr+=8;
     return value;
+}
+
+void put_u8(char **ptr, uint8_t value) {
+    **ptr = (char)value;
+    (*ptr)++;
 }
 
 void put_u64(char **ptr, uint64_t value) {
@@ -141,7 +152,11 @@ int get_string(char **src, char **dest) {
 }
 
 void put_string(char **pbuf, char const* str, int size) {
-    if (size < 255) {
+    if (size == 0) {
+        **pbuf = 0;
+        (*pbuf)++;
+        return;
+    } else if (size < 255) {
         **pbuf = (char) size;
         (*pbuf)++;
     } else {

@@ -37,25 +37,31 @@ void test_streamerinfo(struct FileContext ctx, struct TopDirectory const* root) 
     from_buf_key(&buffer, &key_info);
     print_key(&key_info);
 
-    char *decomp_buffer = malloc(key_info.obj_bytes);
-    unzip(&decomp_buffer, buffer, key_info.total_bytes - key_info.key_bytes, key_info.obj_bytes);
+
+    char *buffer_to_use;
+    if (key_info.total_bytes - key_info.key_bytes < key_info.obj_bytes) {
+        char *decomp_buffer = malloc(key_info.obj_bytes);
+        unzip(&decomp_buffer, buffer, key_info.total_bytes - key_info.key_bytes, key_info.obj_bytes);
+        buffer_to_use = decomp_buffer;
+    } else
+        buffer_to_use = buffer;
 
     // tlist!
     uint32_t version;
-    version = get_version(&decomp_buffer);
+    version = get_version(&buffer_to_use);
     printf("version = %u\n", version);
 
-    version = get_version(&decomp_buffer);
+    version = get_version(&buffer_to_use);
     printf("version = %u\n", version);
 
-    printf("value = %u\n", get_u32(&decomp_buffer)); 
-    printf("value = %u\n", get_u32(&decomp_buffer));
+    printf("value = %u\n", get_u32(&buffer_to_use)); 
+    printf("value = %u\n", get_u32(&buffer_to_use));
 
-    char *str;
-    get_string(&decomp_buffer, &str);
-    printf("string = %s\n", str);
+    struct PString str;
+    from_buf_pstring(&buffer_to_use, &str);
+    print_pstring(&str);
 
-    printf("value = %u\n", get_u32(&decomp_buffer));
+    printf("value = %u\n", get_u32(&buffer_to_use));
 }
 
 void test_free_segments(struct FileContext ctx, struct TopDirectory const* root) {

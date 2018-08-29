@@ -3,6 +3,25 @@
 #include "debug.h"
 
 //
+// POJect Product
+//
+void from_buf_object(char ** buffer, struct PObject *obj) {
+    obj->version = get_version(buffer);
+    obj->id = get_u32(buffer);
+    obj->bits = get_u32(buffer);
+}
+
+void to_buf_object(char ** buffer, struct PObject *obj) {
+    put_version(buffer, obj->version);
+    put_u32(buffer, obj->id);
+    put_u32(buffer, obj->bits);
+}
+
+uint32_t size_object(struct PObject* obj) {
+    return 10;
+}
+
+//
 // pstring
 //
 void print_pstring(struct PString* ppstr) {
@@ -26,6 +45,20 @@ void dtor_pstring(struct PString *ppstr) {
     free(ppstr->str);
 }
 
+uint32_t size_in_bytes_string(struct PString *pstr) {
+    uint32_t nbytes = 1;
+    if (pstr->size > 0 && pstr->size < 255)
+        nbytes += pstr->size;
+    else if (pstr->size >= 255)
+        nbytes += 3 + pstr->size;
+
+    return nbytes;
+}
+
+uint32_t size_pstring(struct PString* pstr) {
+    return (uint32_t)(pstr->size);
+}
+
 //
 // PDatime
 //
@@ -47,9 +80,10 @@ void print_datime(struct PDatime *pdatime) {
     print_u32(pdatime->raw);
 }
 
-uint32_t sizeof_datime(struct PDatime *pdatime) {
+uint32_t size_datime(struct PDatime *pdatime) {
     return 4;
 }
+
 //
 // PNamed
 //
@@ -77,6 +111,10 @@ void dtor_named(struct PNamed *pnamed) {
     dtor_pstring(&pnamed->title);
 }
 
+uint32_t size_named(struct PNamed *pnamed) {
+    return size_in_bytes_string(&pnamed->name) + size_in_bytes_string(&pnamed->title);
+}
+
 //
 // file header 
 //
@@ -90,7 +128,7 @@ void print_file_header(struct PFileHeader *pheader) {
     print_u32(pheader->nbytes_free);
     print_u32(pheader->nfree);
     print_u32(pheader->nbytes_name);
-    print_char(pheader->units);
+    print_u32((uint32_t)pheader->units);
     print_u32(pheader->compress);
     print_u64(pheader->seek_info);
     print_u32(pheader->nbytes_info);
@@ -160,6 +198,8 @@ void to_buf_file_header(char **buffer, struct PFileHeader *pheader) {
     }
 }
 
+
+
 //
 // key product
 //
@@ -226,6 +266,57 @@ void to_buf_key(char **buffer, struct PKey *pkey) {
     to_buf_pstring(buffer, &pkey->obj_title);
 }
 
+uint32_t size_key(struct PKey *pkey) {
+    uint32_t nbytes = 22;
+    if (pkey->version > 1000) nbytes += 8;
+    nbytes += size_in_bytes_string(&pkey->class_name) 
+        + size_in_bytes_string(&pkey->obj_name) 
+        + size_in_bytes_string(&pkey->obj_title)
+        + size_datime(&pkey->date_time);
+    return nbytes;
+}
+
+//
+// uuid
+//
+void print_uuid(struct PUUID *uuid) {
+    print_u32(uuid->time_low);
+    print_u16(uuid->time_mid);
+    print_u16(uuid->time_hi_and_version);
+    print_uchar(uuid->clock_seq_hi_and_reserved);
+    print_uchar(uuid->clock_seq_low);
+    for (int i=0; i<6; i++)
+        print_uchar((uuid->node)[i]);
+}
+
+void ctor_uuid(struct PUUID *uuid) {}
+
+void dtor_uuid(struct PUUID *uuid) {}
+
+void from_buf_uuid(char **buffer, struct PUUID * uuid) {
+    uuid->time_low = get_u32(buffer);
+    uuid->time_mid = get_u16(buffer);
+    uuid->time_hi_and_version = get_u16(buffer);
+    uuid->clock_seq_hi_and_reserved = get_u8(buffer);
+    uuid->clock_seq_low = get_u8(buffer);
+    for (int i=0; i<6; i++)
+        (uuid->node)[i] = get_u8(buffer);
+}
+
+void to_buf_uuid(char **buffer, struct PUUID *uuid) {
+    put_u32(buffer, uuid->time_low);
+    put_u16(buffer, uuid->time_mid);
+    put_u8(buffer, uuid->time_hi_and_version);
+    put_u8(buffer, uuid->clock_seq_hi_and_reserved);
+    put_u8(buffer, uuid->clock_seq_low);
+    for (int i=0; i<6; i++)
+        put_u8(buffer, (uuid->node)[i]);
+}
+
+uint32_t size_uuid(struct PUUID* ppuid) {
+    return 16u;
+}
+
 //
 // directory product
 //
@@ -244,6 +335,7 @@ void print_dir(struct PDirectory *pdir) {
     print_u64(pdir->seek_dir);
     print_u64(pdir->seek_parent);
     print_u64(pdir->seek_keys);
+    print_uuid(&(pdir->uuid));
 }
 
 void from_buf_dir(char **buffer, struct PDirectory *pdir) {
@@ -261,6 +353,7 @@ void from_buf_dir(char **buffer, struct PDirectory *pdir) {
         pdir->seek_parent = get_u32(buffer);
         pdir->seek_keys = get_u32(buffer);
     }
+    from_buf_uuid(buffer, &pdir->uuid);
 }
 
 void to_buf_dir(char **buffer, struct PDirectory *pdir) {
@@ -278,6 +371,25 @@ void to_buf_dir(char **buffer, struct PDirectory *pdir) {
         put_u32(buffer, (uint32_t)pdir->seek_parent);
         put_u32(buffer, (uint32_t)pdir->seek_keys);
     }
+    to_buf_uuid(buffer, &pdir->uuid);
+    if (pdir->version <= 1000)
+        for (int i=0; i<3; i++) put_u32(buffer, 0);
+}
+
+uint32_t size_dir(struct PDirectory *pdir) {
+    // version (just short) + nbytes_keys + nbytes_name + seek_dir + seek_parent + seek_keys (as int)
+    int nbytes = 22; 
+    if (pdir->version > 1000)
+        nbytes += 12;
+    nbytes += size_datime(&pdir->date_time_c) + size_datime(&pdir->date_time_m) + size_uuid(&pdir->uuid);
+    return nbytes;
+}
+
+uint32_t size_keylist(struct KeyList* pkeylist) {
+    uint32_t nbytes = 4;
+    for (int i=0; i<pkeylist->size; i++)
+        nbytes += size_key(&((pkeylist->pkeys)[i]));
+    return nbytes;
 }
 
 void list_keys(struct FileContext ctx, struct PDirectory *pdir, 

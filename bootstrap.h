@@ -21,11 +21,21 @@ void from_buf_pstring(char **buffer, struct PString* pstring);
 void to_buf_pstring(char **buffer, struct PString const* pstring);
 void ctor_pstring(struct PString*);
 void dtor_pstring(struct PString*);
+uint32_t size_in_bytes_string(struct PString *);
+uint32_t size_pstring(struct PString *); 
 
 //
 // PObject
 //
-struct PObject {};
+struct PObject {
+    uint16_t version;
+    uint32_t id;
+    uint32_t bits;
+};
+
+uint32_t size_object(struct PObject*);
+void from_buf_object(char ** buffer, struct PObject *);
+void to_buf_object(char ** buffer, struct PObject*);
 
 //
 // PDatime
@@ -40,6 +50,7 @@ void from_buf_datime(char **buffer, struct PDatime *pdatime);
 void to_buf_datime(char **buffer, struct PDatime *pdatime);
 void ctor_datime(struct PDatime *pdatime);
 void dtor_datime(struct PDatime *pdatime);
+uint32_t size_datime(struct PDatime*);
 
 //
 // PNamed
@@ -55,6 +66,7 @@ void from_buf_named(char **buffer, struct PNamed *pnamed);
 void to_buf_named(char **buffer, struct PNamed *pnamed);
 void ctor_named(struct PNamed *pnamed);
 void dtor_named(struct PNamed *pnamed);
+uint32_t size_named(struct PNamed*);
 
 //
 // file header 
@@ -103,11 +115,30 @@ void ctor_key(struct PKey *pkey);
 void dtor_key(struct PKey *pkey);
 void from_buf_key(char **buffer, struct PKey *pkey);
 void to_buf_key(char **buffer, struct PKey*);
+uint32_t size_key(struct PKey*);
 
 struct KeyList {
     int size;
     struct PKey *pkeys;
 };
+
+uint32_t size_keylist(struct KeyList*);
+
+struct PUUID {
+    uint32_t time_low;
+    uint16_t time_mid;
+    uint16_t time_hi_and_version;
+    uint8_t clock_seq_hi_and_reserved;
+    uint8_t clock_seq_low;
+    uint8_t node[6];
+};
+
+void print_uuid(struct PUUID *uuid);
+void ctor_uuid(struct PUUID *uuid);
+void dtor_uuid(struct PUUID *);
+void from_buf_uuid(char **buffer, struct PUUID *);
+void to_buf_uuid(char **buffer, struct PUUID *);
+uint32_t size_uuid(struct PUUID*);
 
 //
 // directory product
@@ -122,6 +153,7 @@ struct PDirectory {
     uint64_t seek_dir;
     uint64_t seek_parent;
     uint64_t seek_keys;
+    struct PUUID uuid;
 };
 
 void ctor_dir(struct PDirectory *pdir);
@@ -129,6 +161,7 @@ void dtor_dir(struct PDirectory *pdir);
 void print_dir(struct PDirectory *pdir);
 void from_buf_dir(char **buffer, struct PDirectory *pdir);
 void to_buf_dir(char **buffer, struct PDirectory *pdir);
+uint32_t size_dir(struct PDirectory*);
 
 struct TopDirectory_v2 {
     struct PFileHeader header;

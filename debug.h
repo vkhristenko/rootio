@@ -15,6 +15,9 @@ void dump_raw(char *buf, int size, int nbytes_per_row);
 #define print_char(value) \
     printf(#value" = %c\n", value)
 
+#define print_uchar(value) \
+    printf(#value" = %u\n", value)
+
 #define print_u32(value) \
     printf(#value" = %u\n", value)
 

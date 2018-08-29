@@ -18,6 +18,7 @@ void swap_64(char *src, char *dest);
 //
 // 
 //
+uint8_t get_u8(char **ptr);
 uint16_t get_u16(char ** ptr);
 int16_t get_i16(char **ptr);
 int32_t get_i32(char **ptr);
@@ -29,6 +30,7 @@ float get_f32(char **ptr);
 uint32_t get_version(char **ptr);
 int get_string(char **src, char **dest);
 
+void put_u8(char **ptr, uint8_t);
 void put_u16(char **ptr, uint16_t);
 void put_u32(char **ptr, uint32_t);
 void put_u64(char **ptr, uint64_t);
