@@ -59,6 +59,45 @@ uint32_t size_pstring(struct PString* pstr) {
     return (uint32_t)(pstr->size);
 }
 
+void print_pfree(struct PFree* pfree) {
+    print_u16(pfree->version);
+    print_u64(pfree->begin);
+    print_u64(pfree->end);
+}
+
+void from_buf_pfree(char **buffer, struct PFree *pfree) {
+    pfree->version = get_version(buffer);
+    if (pfree->version > 1000) {
+        pfree->begin = get_u64(buffer);
+        pfree->end = get_u64(buffer);
+    } else {
+        pfree->begin = get_u32(buffer);
+        pfree->end = get_u32(buffer);
+    }
+}
+
+void to_buf_pfree(char **buffer, struct PFree *pfree) {
+    put_version(buffer, pfree);
+    if (pfree->version > 1000) {
+        put_u64(buffer, pfree->begin);
+        put_u64(buffer, pfree->end);
+    } else {
+        put_u32(buffer, (uint32_t)pfree->begin);
+        put_u32(buffer, (uint32_t)pfree->end);
+    }
+}
+
+uint32_t size_pfree(struct PFree *pfree) {
+    int nbytes = 10;
+    if (pfree->version > 1000)
+        nbytes += 8;
+    return nbytes;
+}
+
+void ctor_pfreenode(struct PFreeNode *node) {
+    node->next = NULL:
+}
+
 //
 // PDatime
 //

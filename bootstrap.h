@@ -25,6 +25,29 @@ uint32_t size_in_bytes_string(struct PString *);
 uint32_t size_pstring(struct PString *); 
 
 //
+// Free Segment 
+//
+struct PFree {
+    uint16_t version;
+    uint64_t begin, end;
+};
+
+void print_pfree(struct PFree*);
+void from_buf_pfree(char **, struct PFree*);
+void to_buf_pfree(char **, struct PFree*);
+uint32_t size_pfree(struct PFree*);
+
+// singly-linked list
+struct PFreeNode {
+    struct PFree pfree;
+    struct PFreeNode* next;
+};
+
+void ctor_pfreenode(struct PFreeNode* node) {
+    node->next = NULL;
+}
+
+//
 // PObject
 //
 struct PObject {
@@ -163,6 +186,9 @@ void from_buf_dir(char **buffer, struct PDirectory *pdir);
 void to_buf_dir(char **buffer, struct PDirectory *pdir);
 uint32_t size_dir(struct PDirectory*);
 
+//
+// Bootstrapping logic / functionality passing style
+//
 struct TopDirectory_v2 {
     struct PFileHeader header;
     struct PKey key;
@@ -175,9 +201,6 @@ struct TopDirectory {
     struct PDirectory dir;
 };
 
-//
-// Bootstrapping logic / functionality passing style
-//
 void get_top_dir(struct FileContext ctx, struct PDirectory *pdir);
 void list_keys(struct FileContext ctx, struct PDirectory *pdir, 
                struct PKey ** pkeys, int *pnkeys);
@@ -199,5 +222,16 @@ void root_reserve_at_location(struct FileContext, long location, int size);
 void root_reserve(struct FileContext, int size);
 void root_write(struct FileContext, char*, int);
 void root_write_at_location(struct FileContext, long, char*, int);
+
+struct TopDirectoryBundle {
+    struct PKey key;
+    struct PNamed named;
+    struct PDirectory dir;
+};
+
+struct BootstrapBundle {
+    struct PFileHeader header;
+    struct TopDirectoryBundle dirb;
+};
 
 #endif // bootstrap_h
