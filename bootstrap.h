@@ -43,9 +43,7 @@ struct PFreeNode {
     struct PFreeNode* next;
 };
 
-void ctor_pfreenode(struct PFreeNode* node) {
-    node->next = NULL;
-}
+void ctor_pfreenode(struct PFreeNode* node);
 
 //
 // PObject
@@ -222,16 +220,5 @@ void root_reserve_at_location(struct FileContext, long location, int size);
 void root_reserve(struct FileContext, int size);
 void root_write(struct FileContext, char*, int);
 void root_write_at_location(struct FileContext, long, char*, int);
-
-struct TopDirectoryBundle {
-    struct PKey key;
-    struct PNamed named;
-    struct PDirectory dir;
-};
-
-struct BootstrapBundle {
-    struct PFileHeader header;
-    struct TopDirectoryBundle dirb;
-};
 
 #endif // bootstrap_h

@@ -77,7 +77,7 @@ void from_buf_pfree(char **buffer, struct PFree *pfree) {
 }
 
 void to_buf_pfree(char **buffer, struct PFree *pfree) {
-    put_version(buffer, pfree);
+    put_version(buffer, pfree->version);
     if (pfree->version > 1000) {
         put_u64(buffer, pfree->begin);
         put_u64(buffer, pfree->end);
@@ -95,7 +95,7 @@ uint32_t size_pfree(struct PFree *pfree) {
 }
 
 void ctor_pfreenode(struct PFreeNode *node) {
-    node->next = NULL:
+    node->next = NULL;
 }
 
 //

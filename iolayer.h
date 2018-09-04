@@ -3,80 +3,52 @@
 
 #include "bootstrap.h"
 
-//
-// Records = key + blob. Continuous object
-//
-struct PBlobRecord {
+struct top_dir_record_t {
     struct PKey key;
-    void * blob;
-}
-struct PKeysListRecord {
-    struct PKey key;
-    struct KeyList keylist;
-};
-
-struct PDirectoryRecord {
-    struct PKey key;
+    struct PNamed named;
     struct PDirectory dir;
 };
 
-struct PTopDirectoryRecord {
-    struct PKey pkey;
-    struct PNamed pnamed;
-    struct PDirectory pdir;
+struct streamer_record_t {
+    struct PKey key;
+    void *blob;
 };
 
-struct DirectoryBundle {
-    struct PKeysListRecord keys_record;
-    struct PDirectoryRecord pdir_record;
+struct free_segments_record_t {
+    struct PKey key;
+    int length;
+    struct PFree *pfree;
 };
 
-struct TopDirectoryBundle {
-    struct PKeysListRecord keys_record;
-    struct PTopDirectoryRecord root_dir_record;
-};
-
-struct PFreeSegmentRecord {
-    struct PKey *pkey;
-    struct PFreeNode *pnode; 
-};
-
-// for now we provide an empty streamer record (key + header of TList)
-struct PStreamerInfoRecord {
-    struct PKey *pkey;
+struct llio_t {
+    uint64_t location;
+    struct FileContext fctx;
+    struct PFileHeader header;
+    struct top_dir_record_t top_dir_rec;
+    struct streamer_record_t streamer_record;
+    struct free_segments_record_t free_segments_record;
 };
 
 //
-// I/O Layer abstraction:
-//   getting records to/from memory from/to disk
+// api: open/close
 //
-//   -> a record should be retrieved provided a position
-//   -> a record should be written to a position where position
-//      is not known by the caller. The record is updated with the location and returned
-//      to the caller
-//
-struct IOLayer {
-    uint64_t            location;
-    struct FileContext  fctx;
-    struct PFreeNode    frees;
-};
-
-struct Context {
-    struct IOLayer         io;
-    struct BootstrapBundle bootstrap;
-};
+struct llio_t open_to_read(char *filename);
+struct llio_t open_to_write(char *filename);
+void close_from_read(struct llio_t*);
+void close_from_write(struct llio_t*);
 
 //
-// read records
+// api: read/write records
 //
-struct PDirectoryRecord root_read_record_pdirectory(struct Context* ctx, 
-                                               uint64_t location, uint32_t nbytes) {
-    // allocate room for the whole record
-    char *buffer = malloc(nbytes);
+void read_file_header(struct llio_t*);
+void read_streamer_record(struct llio_t*);
+void read_free_segments_record(struct llio_t*);
+void read_top_dir_record(struct llio_t*);
 
-    root_seek(&ctx->fctx, location);
-
-    root_read_buffer(ctx, &buffer, nbytes);
-}
+void write_file_header(struct llio_t*);
+void write_top_dir_record(struct llio_t*);
+void write_streamer_record(struct llio_t*);
+void write_free_segments_record(struct llio_t*);
+void write_end_byte(struct llio_t*);
 
 #endif // iolayer_h
