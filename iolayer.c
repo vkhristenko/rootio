@@ -20,7 +20,7 @@ void read_streamer_record(struct llio_t* llio) {
 
     // deser key and assign the blob
     from_buf_key(&buffer, &llio->streamer_record.key);
-    llio->streamer_record.blob = (void*)tmp;
+    llio->streamer_record.blob = (char*)buffer;
 }
 
 void read_free_segments_record(struct llio_t* llio) {
@@ -73,7 +73,7 @@ struct llio_t open_to_read(char *filename) {
 struct llio_t open_to_write(char *filename) {
     struct llio_t llio;
     llio.fctx = open_context(filename, "wb");
-    llio.top_dir_record.key.obj_name.str = filename;
+    llio.top_dir_rec.key.obj_name.str = filename;
 
     // write the "root" header
     char *root = "root";
@@ -93,56 +93,58 @@ void close_from_write(struct llio_t *llio) {
 
 void write_file_header(struct llio_t* llio) {
     fseek(llio->fctx.pfile, 4, SEEK_SET);
-    llio->header.begin = 100;
-    llio->header.units = 4;
-    llio->header.compress = 1;
     
-    char tmp[300];
+    char tmp[100];
     char *buffer = tmp;
     to_buf_file_header(&buffer, &llio->header);
-    root_write(llio.fctx, tmp, llio->header.begin);
-    llio->location = llio->header.begin;
+    root_write(llio->fctx, tmp, llio->header.begin - 4);
 }
 
 void write_top_dir_record(struct llio_t *llio) {
-     llio->top_dir_record.key.version = 4;
-     llio->top_dir_record.key.date_time.raw = 1234;
-     llio->top_dir_record.key.cycle = 1;
-     llio->top_dir_record.key.seek_key = header.begin;
-     llio->top_dir_record.key.seek_pdir = 0;
-     llio->top_dir_record.key.class_name.str = "TFile";
-     llio->top_dir_record.key.class_name.size = 5;
-     llio->top_dir_record.key.obj_name.str = filename;
-     /*
-             52     key.obj_name.size = strlen(filename);
-              53     key.obj_title.size = 0;
-               54     key.key_bytes = size_key(&key);
-                55 
-                     56     named.name.str = key.obj_name.str;
-                 57     named.name.size = key.obj_name.size;
-                  58     named.title.str = key.obj_title.str;
-                   59     named.title.size = key.obj_title.size;
-                    60 
-                         61     dir.version = 5;
-                     62     dir.date_time_c.raw = 1234;
-                      63     dir.date_time_m.raw = 1235;
-                       64     dir.nbytes_name = size_key(&key) + size_named(&named);
-                        65     dir.seek_dir = header.begin;
-                         66     dir.seek_parent = 0;
-                          67 
-                               68     // to get the size of bytes for the dir, we need to know the version first
-                                69     key.obj_bytes = size_dir(&dir);
-                           70     key.total_bytes = key.key_bytes + key.obj_bytes + size_named(&named);
+    fseek(llio->fctx.pfile llio->header.begin, SEEK_SET);
 
-                            73     char *buf_toprec = malloc(key.total_bytes);
-                             74     char *buf_toprec_to_free = buf_toprec;
-                              75     to_buf_key(&buf_toprec, &key);
-                               76     to_buf_named(&buf_toprec, &named);
-                                77     to_buf_dir(&buf_toprec, &dir);
-                                 78     root_write(ctx, buf_toprec_to_free, key.total_bytes);
-                                  79 
-                                       80     next_location_to_write += key.total_bytes;
-                                   81 
-                                        82     dir.seek_keys = next_location_to_write;
-                                        */
+    char *buffer = malloc(llio->top_dir_rec.key.total_bytes);
+    char *tmp = buffer;
+    to_buf_key(&buffer, &llio->top_dir_rec.key);
+    to_buf_key(&buffer, &llio->top_dir_rec.named);
+    to_buf_dir(&buffer, &llio->top_dir_rec.dir);
+    root_write(llio->fctx, tmp, llio->top_dir_rec.key.total_bytes);
+
+    free(tmp);
+}
+
+void write_streamer_record(struct llio_t *llio) {
+    fseek(llio->fctx.pfile, llio->location, SEEK_SET);
+    
+    // postcondition
+    llio->streamer_record.key.seek_key = llio->location;
+
+    char *buffer = malloc(llio->streamer_record.key.key_bytes);
+    char *tmp = buffer;
+    to_buf_key(&buffer, llio->streamer_record.key);
+    root_write(llio->fctx, tmp, llio->streamer_record.key.key_bytes);
+    root_write(llio->fctx, llio->streamer_record.key.blob, 
+               llio->streamer_record.key.total_bytes - llio->streamer_record.key.key_bytes);
+
+    // postcondition
+    llio->location += llio->streamer_record.key.total_bytes;
+    free(tmp);
+}
+
+void write_free_segments_record(struct llio_t *llio) {
+    fseek(llio->fctx.pfile, llio->location, SEEK_SET);
+
+    // postcondition
+    llio->free_segments_record.key.seek_key = llio->location;
+
+    char *buffer = malloc(llio->free_segments_record.key.total_bytes);
+    char *tmp = buffer;
+    to_buf_key(&buffer, &llio->free_segments_record.key);
+    for (int i=0; i<llio->free_segments_record.length; i++)
+        to_buf_pfree(&buffer, &(llio->free_segments_record.pfree[i]));
+    root_write(llio->fctx, tmp, llio->free_segments_record.key.total_bytes);
+
+    // postcondition
+    llio->location += llio->free_segments_record.key.total_bytes;
+    free(tmp);
 }
