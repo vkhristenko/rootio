@@ -39,7 +39,21 @@ void to_buf_pstring(char **buffer, struct PString const* ppstr) {
     put_string(buffer, ppstr->str, ppstr->size);
 }
 
-void ctor_pstring(struct PString *ppstr) {}
+void ctor_pstring(struct PString *ppstr) {
+    ppstr->str = "";
+    ppstr->size = 0;
+}
+
+void ctor_nomemcopy_pstring(struct PString *ppstr, char *pstr, int size) {
+    ppstr->size = size;
+    ppstr->str = pstr;
+}
+
+void ctor_memcopy_pstring(struct PString *ppstr, char *pstr, int size) {
+    ppstr->size = size;
+    ppstr->str = malloc(ppstr->size);
+    memcpy(ppstr->str, pstr, ppstr->size);
+}
 
 void dtor_pstring(struct PString *ppstr) {
     free(ppstr->str);
@@ -94,6 +108,12 @@ uint32_t size_pfree(struct PFree *pfree) {
     return nbytes;
 }
 
+void ctor_pfree(struct PFree *pfree, uint64_t begin, uint64_t end) {
+    pfree->version = 1;
+    pfree->begin = begin;
+    pfree->end = end;
+}
+
 void ctor_pfreenode(struct PFreeNode *node) {
     node->next = NULL;
 }
@@ -109,7 +129,9 @@ void to_buf_datime(char **buffer, struct PDatime *pdatime) {
     put_u32(buffer, pdatime->raw);
 }
 
-void ctor_datime(struct PDatime *pdatime) {}
+void ctor_datime(struct PDatime *pdatime) {
+    pdatime->raw = 12345;
+}
 
 void dtor_datime(struct PDatime *pdatime) {}
 
@@ -121,6 +143,10 @@ void print_datime(struct PDatime *pdatime) {
 
 uint32_t size_datime(struct PDatime *pdatime) {
     return 4;
+}
+
+void ctor_fromval_datime(struct PDatime* pdatime, int32_t value) {
+    pdatime->raw = value;
 }
 
 //
@@ -143,7 +169,15 @@ void to_buf_named(char **buffer, struct PNamed *pnamed) {
     to_buf_pstring(buffer, &pnamed->title);
 }
 
-void ctor_named(struct PNamed *pnamed) {}
+void ctor_named(struct PNamed *pnamed) {
+    ctor_pstring(&pnamed->name);
+    ctor_pstring(&pnamed->title);
+}
+
+void ctor_frompstring_named(struct PNamed* pnamed, struct PString* pname, struct PString* ptitle) {
+    ctor_nomemcopy_pstring(&pnamed->name, pname->str, pname->size);
+    ctor_nomemcopy_pstring(&pnamed->title, ptitle->str, ptitle->size);
+}
 
 void dtor_named(struct PNamed *pnamed) {
     dtor_pstring(&pnamed->name);
@@ -173,7 +207,11 @@ void print_file_header(struct PFileHeader *pheader) {
     print_u32(pheader->nbytes_info);
 }
 
-void ctor_file_header(struct PFileHeader *pheader) {}
+void ctor_file_header(struct PFileHeader *pheader) {
+    pheader->begin = 100;
+    pheader->units = 4;
+    pheader->compress = 1;
+}
 
 void dtor_file_header(struct PFileHeader *pheader) {}
 
@@ -258,7 +296,20 @@ void print_key(struct PKey *pkey) {
     print_pstring(&pkey->obj_title);
 }
 
-void ctor_key(struct PKey *pkey) {}
+void ctor_key(struct PKey *pkey) {
+    pkey->version = 4;
+    ctor_fromval_datime(&pkey->date_time, 1111);
+    pkey->cycle = 1;
+    pkey->seek_pdir = 0;
+}
+
+void ctor_withnames_key(struct PKey *pkey, struct PString* pclass_name, struct PString *pobj_name,
+                        struct PString *pobj_title) {
+    ctor_key(pkey);
+    ctor_nomemcopy_pstring(&pkey->class_name, pclass_name->str, pclass_name->size);
+    ctor_nomemcopy_pstring(&pkey->obj_name, pobj_name->str, pobj_name->size);
+    ctor_nomemcopy_pstring(&pkey->obj_title, pobj_title->str, pobj_title->size);
+}
 
 void dtor_key(struct PKey *pkey) {
     dtor_pstring(&pkey->class_name);
@@ -359,7 +410,11 @@ uint32_t size_uuid(struct PUUID* ppuid) {
 //
 // directory product
 //
-void ctor_dir(struct PDirectory *pdir) {}
+void ctor_dir(struct PDirectory *pdir) {
+    pdir->version = 5;
+    ctor_fromval_datime(&pdir->date_time_c, 1234);
+    ctor_fromval_datime(&pdir->date_time_m, 1234);
+}
 
 void dtor_dir(struct PDirectory *pdir) {}
 

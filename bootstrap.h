@@ -11,6 +11,18 @@ struct FileContext {
     FILE *pfile;
 };
 
+/**
+ * All of the constructor functions below are assumed to assign 
+ * default values to the members of the struct or function parameters provide explicitly what
+ * to assign to some of them
+ */
+
+/**
+ * Assumptions about these simple strings:
+ *   1. whenever struct PString* is passed to a ctor of some type,
+ *      it is expected that it takes ownership of it. Meaning can pass w/o memcopy.
+ * TODO: our string implementation is flawed due to trying to free multiple times the same string
+ */
 struct PString {
     int size;
     char *str;
@@ -20,6 +32,12 @@ void print_pstring(struct PString*);
 void from_buf_pstring(char **buffer, struct PString* pstring);
 void to_buf_pstring(char **buffer, struct PString const* pstring);
 void ctor_pstring(struct PString*);
+void ctor_nomemcopy_pstring(struct PString *ppstr, char *pstr, int size);
+void ctor_memcopy_pstring(struct PString *ppstr, char *pstr, int size);
+
+/**
+ * note: should only be called once when u own this string, as we do not enforce copying
+ */
 void dtor_pstring(struct PString*);
 uint32_t size_in_bytes_string(struct PString *);
 uint32_t size_pstring(struct PString *); 
@@ -36,6 +54,7 @@ void print_pfree(struct PFree*);
 void from_buf_pfree(char **, struct PFree*);
 void to_buf_pfree(char **, struct PFree*);
 uint32_t size_pfree(struct PFree*);
+void ctor_pfree(struct PFree*, uint64_t begin, uint64_t end);
 
 // singly-linked list
 struct PFreeNode {
@@ -70,6 +89,7 @@ void print_datime(struct PDatime *pdatime);
 void from_buf_datime(char **buffer, struct PDatime *pdatime);
 void to_buf_datime(char **buffer, struct PDatime *pdatime);
 void ctor_datime(struct PDatime *pdatime);
+void ctor_fromval_datime(struct PDatime*, int32_t);
 void dtor_datime(struct PDatime *pdatime);
 uint32_t size_datime(struct PDatime*);
 
@@ -86,6 +106,7 @@ void print_named(struct PNamed *pnamed);
 void from_buf_named(char **buffer, struct PNamed *pnamed);
 void to_buf_named(char **buffer, struct PNamed *pnamed);
 void ctor_named(struct PNamed *pnamed);
+void ctor_frompstring_named(struct PNamed*, struct PString*, struct PString*);
 void dtor_named(struct PNamed *pnamed);
 uint32_t size_named(struct PNamed*);
 
@@ -133,6 +154,8 @@ struct PKey {
 
 void print_key(struct PKey *pkey);
 void ctor_key(struct PKey *pkey);
+void ctor_withnames_key(struct PKey *pkey, struct PString* pclass_name, struct PString *pobj_name, 
+                        struct PString *pobj_title);
 void dtor_key(struct PKey *pkey);
 void from_buf_key(char **buffer, struct PKey *pkey);
 void to_buf_key(char **buffer, struct PKey*);

@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "iolayer.h"
 
 void read_file_header(struct llio_t *llio) {
@@ -81,17 +83,37 @@ struct llio_t open_to_write(char *filename) {
 
     /* tmp initialization section */
     // header init
-    llio.header.begin = 100;
-    llio.units = 4;
-    llio.compress = 1;
+    ctor_file_header(&llio.header);
     
-    // set the name of the file and class name
-    llio.top_dir_rec.key.class_name.str = "TFile";
-    llio.top_dir_rec.key.class_name.size = strlen("TFile");
-    llio.top_dir_rec.key.obj_name.str = filename;
-    llio.top_dir_rec.key.obj_name.size = strlen(filename)k;
-    llio.top_dir_rec.named.name.str = filename;
-    llio.top_dir_rec.named.name.size = llio.top_dir_rec.key.obj_name.size;
+    // top dir record init
+    struct PString class_name, obj_name, title_name;
+    class_name.str = "TFile"; class_name.size = 5;
+    obj_name.str = filename; obj_name.size = strlen(filename);
+    title_name.str = ""; title_name.size = 0;
+    ctor_withnames_key(&llio.top_dir_rec.key, &class_name, &obj_name, &title_name);
+    ctor_frompstring_named(&llio.top_dir_rec.named, &obj_name, &title_name);
+    ctor_dir(&llio.top_dir_rec.dir);
+
+    /* after the initialization above -> sizes of PKey, PNamed and PDirectory are known */
+    /* the only thing directory needs to be in a final state is to also have seek_keys available */
+    // top dir record assign the rest of values/sizes
+    llio.top_dir_rec.key.seek_key = llio.header.begin;
+    llio.top_dir_rec.key.seek_pdir = 0;
+    llio.top_dir_rec.key.key_bytes = size_key(&llio.top_dir_rec.key);
+
+    llio.top_dir_rec.dir.nbytes_name = size_key(&llio.top_dir_rec.key) + size_named(&llio.top_dir_rec.named);
+    llio.top_dir_rec.dir.seek_dir = llio.header.begin;
+    llio.top_dir_rec.dir.seek_parent = 0;
+
+    llio.top_dir_rec.key.obj_bytes = size_dir(&llio.top_dir_rec.dir) + size_named(&llio.top_dir_rec.named);
+    llio.top_dir_rec.key.total_bytes = llio.top_dir_rec.key.key_bytes + llio.top_dir_rec.key.obj_bytes;
+
+    // next location to write the record to (does not include header + root dir record)
+    llio.location += llio.header.begin - 4 + llio.top_dir_rec.key.total_bytes;
+
+    // write header + root dir record
+    write_file_header(&llio);
+    write_top_dir_record(&llio);
 
     return llio;
 }
