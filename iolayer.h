@@ -9,6 +9,11 @@ struct top_dir_record_t {
     struct PDirectory dir;
 };
 
+struct generic_record_t {
+    struct PKey key;
+    char *blob;
+};
+
 /**
  * Streamer Record. For now a simple impl
  *   Key + TList of StreamerElements
@@ -98,5 +103,8 @@ void write_top_dir_record(struct llio_t*);
 void write_streamer_record(struct llio_t*);
 void write_free_segments_record(struct llio_t*);
 void write_end_byte(struct llio_t*);
+
+// writing a generic record: key + blob
+void write_generic_record(struct llio_t*, struct generic_record_t *);
 
 #endif // iolayer_h

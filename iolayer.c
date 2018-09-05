@@ -183,3 +183,22 @@ void write_free_segments_record(struct llio_t *llio) {
     llio->location += llio->free_segments_record.key.total_bytes;
     free(tmp);
 }
+
+void write_generic_record(struct llio_t* llio, struct generic_record_t *record) {
+    fseek(llio->fctx.pfile, llio->location, SEEK_SET);
+
+    // postcondition
+    record->key.seek_key = llio->location;
+
+    // write
+    char *buffer = malloc(record->key.key_bytes);
+    char *tmp = buffer;
+    to_buf_key(&buffer, &record->key);
+    root_write(llio->fctx, tmp, record->key.key_bytes);
+    root_write(llio->fctx, record->blob, record->key.total_bytes - record->key.key_bytes);
+
+    // postcondition
+    llio->location += record->key.total_bytes;
+
+    free(tmp);
+}

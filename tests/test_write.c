@@ -4,6 +4,12 @@
 
 #include "iolayer.h"
 
+struct generic_record_t simulate_keylist_record(struct PDirectory* pdir) {
+    struct generic_record_t record;
+
+    return record;
+}
+
 int main(int argc, char** argv) {
     if (argc==1) {
         printf("no input file provided\n");
