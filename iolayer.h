@@ -40,7 +40,8 @@ struct llio_t {
     struct PFileHeader header;
     // owns
     struct top_dir_record_t top_dir_rec;
-    // 
+    // when reading -> read a blob and provide to the higher layer
+    // when writing -> consume a blob and write to disk
     struct streamer_record_t streamer_record;
     struct free_segments_record_t free_segments_record;
 };

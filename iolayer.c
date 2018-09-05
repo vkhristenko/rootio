@@ -73,12 +73,25 @@ struct llio_t open_to_read(char *filename) {
 struct llio_t open_to_write(char *filename) {
     struct llio_t llio;
     llio.fctx = open_context(filename, "wb");
-    llio.top_dir_rec.key.obj_name.str = filename;
 
     // write the "root" header
     char *root = "root";
     root_write(llio.fctx, root, 4);
     llio.location = 4;
+
+    /* tmp initialization section */
+    // header init
+    llio.header.begin = 100;
+    llio.units = 4;
+    llio.compress = 1;
+    
+    // set the name of the file and class name
+    llio.top_dir_rec.key.class_name.str = "TFile";
+    llio.top_dir_rec.key.class_name.size = strlen("TFile");
+    llio.top_dir_rec.key.obj_name.str = filename;
+    llio.top_dir_rec.key.obj_name.size = strlen(filename)k;
+    llio.top_dir_rec.named.name.str = filename;
+    llio.top_dir_rec.named.name.size = llio.top_dir_rec.key.obj_name.size;
 
     return llio;
 }
@@ -101,12 +114,12 @@ void write_file_header(struct llio_t* llio) {
 }
 
 void write_top_dir_record(struct llio_t *llio) {
-    fseek(llio->fctx.pfile llio->header.begin, SEEK_SET);
+    fseek(llio->fctx.pfile, llio->header.begin, SEEK_SET);
 
     char *buffer = malloc(llio->top_dir_rec.key.total_bytes);
     char *tmp = buffer;
     to_buf_key(&buffer, &llio->top_dir_rec.key);
-    to_buf_key(&buffer, &llio->top_dir_rec.named);
+    to_buf_named(&buffer, &llio->top_dir_rec.named);
     to_buf_dir(&buffer, &llio->top_dir_rec.dir);
     root_write(llio->fctx, tmp, llio->top_dir_rec.key.total_bytes);
 
@@ -121,9 +134,9 @@ void write_streamer_record(struct llio_t *llio) {
 
     char *buffer = malloc(llio->streamer_record.key.key_bytes);
     char *tmp = buffer;
-    to_buf_key(&buffer, llio->streamer_record.key);
+    to_buf_key(&buffer, &llio->streamer_record.key);
     root_write(llio->fctx, tmp, llio->streamer_record.key.key_bytes);
-    root_write(llio->fctx, llio->streamer_record.key.blob, 
+    root_write(llio->fctx, llio->streamer_record.blob, 
                llio->streamer_record.key.total_bytes - llio->streamer_record.key.key_bytes);
 
     // postcondition
