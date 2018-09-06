@@ -8,7 +8,7 @@ void dump_raw(char *buf, int size, int nbytes_per_row) {
     for (size_t i=0; i<size; i++) {
         if (i%nbytes_per_row == 0 && i>0)
             printf("\n");
-        printf("%02X ", buf[i]);
+        printf("%02X ", (unsigned char)buf[i]);
     }
     printf("\n");
 }

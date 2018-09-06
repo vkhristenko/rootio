@@ -24,9 +24,10 @@ void simulate_streamer_record(struct llio_t *llio) {
     obj.bits = 0x1111;
     struct PString str_sinfo;
     str_sinfo.size = 0;
+    int byte_count = 0;
     uint32_t nbytes_sinfo = size_object(&obj) + 
                             size_in_bytes_string(&str_sinfo) +
-                            2 + 4;
+                            2 + 4 + 4;
 
     // note: we do not free this resource.
     // TODO
@@ -36,6 +37,7 @@ void simulate_streamer_record(struct llio_t *llio) {
     to_buf_object(&buffer_sinfo, &obj);
     to_buf_pstring(&buffer_sinfo, &str_sinfo);
     put_u32(&buffer_sinfo, n_sinfo);
+    put_u32(&buffer_sinfo, byte_count);
     llio->streamer_record.blob = tmp_sinfo;
     
     // generate a key for that blob

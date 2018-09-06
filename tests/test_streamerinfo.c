@@ -7,31 +7,13 @@
 #include "aux.h"
 #include "debug.h"
 
-struct PFree {
-    uint64_t begin, end;
-};
-
-void from_buf_free(char **buf, struct PFree* ifree) {
-    uint32_t version = get_version(buf);
-    if (version > 1000) {
-        ifree->begin = get_u64(buf);
-        ifree->end = get_u64(buf);
-    } else {
-        ifree->begin = (uint64_t)get_u32(buf);
-        ifree->end = (uint64_t)get_u32(buf);
-    }
-}
-
-void print_free(struct PFree const* pfree) {
-    print_u64(pfree->begin);
-    print_u64(pfree->end);
-}
-
 void test_streamerinfo(struct FileContext ctx, struct TopDirectory const* root) {
     fseek(ctx.pfile, root->header.seek_info, SEEK_SET);
 
     char *buffer = malloc(root->header.nbytes_info);
-    size_t nbytest = fread(buffer, 1, root->header.nbytes_info, ctx.pfile);
+    size_t nbytes = fread(buffer, 1, root->header.nbytes_info, ctx.pfile);
+
+    dump_raw(buffer, nbytes, 25);
 
     struct PKey key_info;
     from_buf_key(&buffer, &key_info);
@@ -62,24 +44,9 @@ void test_streamerinfo(struct FileContext ctx, struct TopDirectory const* root) 
     print_pstring(&str);
 
     printf("value = %u\n", get_u32(&buffer_to_use));
-}
-
-void test_free_segments(struct FileContext ctx, struct TopDirectory const* root) {
-    fseek(ctx.pfile, root->header.seek_free, SEEK_SET);
-    
-    char *buffer = malloc(root->header.nbytes_free);
-    size_t nbytes = fread(buffer, 1, root->header.nbytes_free, ctx.pfile);
-
-    struct PKey key_free;
-    from_buf_key(&buffer, &key_free);
-    print_key(&key_free);
-
-    for (int i=0; i<root->header.nfree; i++) {
-        struct PFree ifree;
-        from_buf_free(&buffer, &ifree);
-        print_free(&ifree);
-    }
-        
+    printf("value = %u\n", get_u32(&buffer_to_use));
+    printf("value = %u\n", get_u32(&buffer_to_use));
+    printf("value = %u\n", get_u32(&buffer_to_use));
 }
 
 int main(int argc, char **argv) {
