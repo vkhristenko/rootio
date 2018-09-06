@@ -683,8 +683,6 @@ struct KeyList read_keys(struct FileContext ctx, struct PDirectory const* pdir) 
     struct PKey key;
     ctor_key(&key);
     from_buf_key(&buffer, &key);
-    printf("\n\nprint keys list\n\n");
-    print_key(&key);
     
     // get how many keys we have and allocate enough space on heap
     klist.size = get_u32(&buffer);
