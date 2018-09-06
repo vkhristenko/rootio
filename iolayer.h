@@ -10,10 +10,10 @@ struct top_dir_record_t {
 };
 
 struct keys_list_record_t {
-    struct PKey;
+    struct PKey key;
     int length;
     struct PKey *pkeys;
-}
+};
 
 struct generic_record_t {
     struct PKey key;

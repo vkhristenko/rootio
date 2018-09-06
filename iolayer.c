@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "iolayer.h"
+#include "aux.h"
 
 void read_file_header(struct llio_t *llio) {
     char *buffer = malloc(100);
@@ -107,6 +108,9 @@ struct llio_t open_to_write(char *filename) {
 
     llio.top_dir_rec.key.obj_bytes = size_dir(&llio.top_dir_rec.dir) + size_named(&llio.top_dir_rec.named);
     llio.top_dir_rec.key.total_bytes = llio.top_dir_rec.key.key_bytes + llio.top_dir_rec.key.obj_bytes;
+    
+    // set the nbytes_name right away for the header
+    llio.header.nbytes_name = llio.top_dir_rec.dir.nbytes_name;
 
     // next location to write the record to (does not include header + root dir record)
     llio.location += llio.header.begin - 4 + llio.top_dir_rec.key.total_bytes;
@@ -128,7 +132,7 @@ void close_from_write(struct llio_t *llio) {
 
 void write_file_header(struct llio_t* llio) {
     fseek(llio->fctx.pfile, 4, SEEK_SET);
-    
+
     char tmp[100];
     char *buffer = tmp;
     to_buf_file_header(&buffer, &llio->header);
@@ -231,17 +235,18 @@ void write_keys_list_record_for_dir(struct llio_t *llio, struct keys_list_record
     // postcondition
     keys_list_record->key.seek_key = llio->location;
     dir->seek_keys = llio->location;
+    dir->nbytes_keys = keys_list_record->key.total_bytes;
 
-    char *buffer = malloc(keys_list_record.key.total_bytes);
+    char *buffer = malloc(keys_list_record->key.total_bytes);
     char *tmp = buffer;
-    to_buf_key(&buffer, &keys_list_record.key);
-    put_u32(&buffer, uint32_t(keys_list_record.length));
-    for (int i=0; i<keys_list_record.length; i++)
-        to_buf_key(&buffer, &(keys_list_record.pkeys[i]));
-    root_write(llio->fctx, tmp, keys_list_record.key.total_bytes);
+    to_buf_key(&buffer, &keys_list_record->key);
+    put_u32(&buffer, (uint32_t)(keys_list_record->length));
+    for (int i=0; i<keys_list_record->length; i++)
+        to_buf_key(&buffer, &(keys_list_record->pkeys[i]));
+    root_write(llio->fctx, tmp, keys_list_record->key.total_bytes);
 
     // postcondition
-    llio->location += keys_list_record.key.total_bytes;
+    llio->location += keys_list_record->key.total_bytes;
 
     free(tmp);
 }

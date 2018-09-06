@@ -301,6 +301,7 @@ void ctor_key(struct PKey *pkey) {
     ctor_fromval_datime(&pkey->date_time, 1111);
     pkey->cycle = 1;
     pkey->seek_pdir = 0;
+    pkey->seek_key = 0;
 
     ctor_pstring(&pkey->class_name);
     ctor_pstring(&pkey->obj_name);

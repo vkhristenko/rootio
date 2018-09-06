@@ -86,7 +86,7 @@ struct keys_list_record_t simulate_keys_list_record_for_dir(struct llio_t *llio,
     record.key.seek_pdir = dir->seek_dir;
     record.key.key_bytes = size_key(&record.key);
     record.key.obj_bytes = 4;
-    record.key.total_bytes = record.key.obj_bytes + key.key_bytes;
+    record.key.total_bytes = record.key.obj_bytes + record.key.key_bytes;
 
     return record;
 }
@@ -112,34 +112,46 @@ int main(int argc, char** argv) {
         &llio, &llio.top_dir_rec.dir);
 
     printf("--- simulated streamer, free segments and top dir keys list records ---\n");
+
     print_key(&llio.streamer_record.key);
+    printf("- - - - - - - - - - - - - -\n");
     print_key(&llio.free_segments_record.key);
+    printf("- - - - - - - - - - - - - -\n");
     print_key(&keys_list_record.key);
+    printf("- - - - - - - - - - - - - -\n");
 
     // write the keys list for the root/top dir
     write_keys_list_record_for_dir(&llio, &keys_list_record, &llio.top_dir_rec.dir);
+    printf("location to write = %lu and should be %d\n",
+           llio.location, 100 + llio.top_dir_rec.key.total_bytes + 
+           keys_list_record.key.total_bytes);
 
     // sequence of actions to do upon closing the file
     write_streamer_record(&llio);
     printf("location to write = %lu and should be %d\n",
-           llio.location, 100 + llio.top_dir_rec.key.total_bytes + 
+           llio.location, 100 + llio.top_dir_rec.key.total_bytes +
+           keys_list_record.key.total_bytes +
            llio.streamer_record.key.total_bytes);
 
     write_free_segments_record(&llio);
     printf("location to write = %lu and should be %d\n",
            llio.location, 100 + llio.top_dir_rec.key.total_bytes + 
+           keys_list_record.key.total_bytes +
            llio.streamer_record.key.total_bytes + 
            llio.free_segments_record.key.total_bytes);
 
     write_end_byte(&llio);
     printf("location to write = %lu and should be %d\n",
-           llio.location, 100 + llio.top_dir_rec.key.total_bytes + 
+           llio.location, 100 + llio.top_dir_rec.key.total_bytes +
+           keys_list_record.key.total_bytes +
            llio.streamer_record.key.total_bytes + 
            llio.free_segments_record.key.total_bytes + 1);
 
     write_top_dir_record(&llio);
     write_file_header(&llio);
     close_from_write(&llio);
+    
+    print_key(&keys_list_record.key);
 
     return 0;
 }
