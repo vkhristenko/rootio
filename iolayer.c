@@ -161,8 +161,10 @@ void write_streamer_record(struct llio_t *llio) {
     root_write(llio->fctx, llio->streamer_record.blob, 
                llio->streamer_record.key.total_bytes - llio->streamer_record.key.key_bytes);
 
-    // postcondition
+    // postconditions
     llio->location += llio->streamer_record.key.total_bytes;
+    llio->header.seek_info = llio->streamer_record.key.seek_key;
+    llio->header.nbytes_info = llio->streamer_record.key.total_bytes;
     free(tmp);
 }
 
@@ -179,8 +181,11 @@ void write_free_segments_record(struct llio_t *llio) {
         to_buf_pfree(&buffer, &(llio->free_segments_record.pfree[i]));
     root_write(llio->fctx, tmp, llio->free_segments_record.key.total_bytes);
 
-    // postcondition
+    // postconditions
     llio->location += llio->free_segments_record.key.total_bytes;
+    llio->header.nfree = llio->free_segments_record.length;
+    llio->header.seek_free = llio->free_segments_record.key.seek_key;
+    llio->header.nbytes_free = llio->free_segments_record.key.total_bytes;
     free(tmp);
 }
 
@@ -201,4 +206,19 @@ void write_generic_record(struct llio_t* llio, struct generic_record_t *record) 
     llio->location += record->key.total_bytes;
 
     free(tmp);
+}
+
+void write_end_byte(struct llio_t* llio) {
+    // note: no seek is performed -> assuming write_end_byte is called in bundle together with 
+    // streamer and free segments records write
+
+    // postcondition
+    llio->header.end = llio->location;
+
+    // write
+    char *end = "v";
+    root_write(llio->fctx, end, 1);
+
+    // postcondition
+    llio->location += 1;
 }
