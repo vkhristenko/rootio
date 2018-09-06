@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "iolayer.h"
+#include "aux.h"
 
 struct generic_record_t simulate_keylist_record(struct PDirectory* pdir) {
     struct generic_record_t record;
@@ -35,6 +36,7 @@ void simulate_streamer_record(struct llio_t *llio) {
     to_buf_object(&buffer_sinfo, &obj);
     to_buf_pstring(&buffer_sinfo, &str_sinfo);
     put_u32(&buffer_sinfo, n_sinfo);
+    llio->streamer_record.blob = tmp_sinfo;
     
     // generate a key for that blob
     struct PString class_name, obj_name, title_name;
@@ -44,7 +46,7 @@ void simulate_streamer_record(struct llio_t *llio) {
     ctor_nomemcopy_pstring(&obj_name, streamer, strlen(streamer));
     ctor_nomemcopy_pstring(&title_name, tlist, strlen(tlist));
     ctor_withnames_key(&llio->streamer_record.key, &class_name, &obj_name, &title_name);
-    llio->streamer_record.key.seek_pdir = llio.header.begin;
+    llio->streamer_record.key.seek_pdir = llio->header.begin;
     llio->streamer_record.key.key_bytes = size_key(&llio->streamer_record.key);
     llio->streamer_record.key.obj_bytes = nbytes_sinfo;
     llio->streamer_record.key.total_bytes = llio->streamer_record.key.obj_bytes +
@@ -61,7 +63,7 @@ void simulate_free_segments_record(struct llio_t *llio) {
     // generate the key for that list
     struct PString class_name;
     ctor_nomemcopy_pstring(&class_name, "TFile", 5);
-    ctor_withnames_key(&llio->streamer_record.key, &class_name, 
+    ctor_withnames_key(&llio->free_segments_record.key, &class_name, 
                        &llio->top_dir_rec.named.name, 
                        &llio->top_dir_rec.named.title);
     llio->free_segments_record.key.seek_pdir = llio->header.begin;
@@ -87,13 +89,31 @@ int main(int argc, char** argv) {
            llio.location, 100 + llio.top_dir_rec.key.total_bytes);
 
     // we simulate the streamer and free segments records
-    streamer_record = simulate_streamer_record(&llio);
+    simulate_streamer_record(&llio);
     simulate_free_segments_record(&llio);
+
+    printf("--- simulated streamer and free segments records ---\n");
+    print_key(&llio.streamer_record.key);
+    print_key(&llio.free_segments_record.key);
 
     // sequence of actions to do upon closing the file
     write_streamer_record(&llio);
+    printf("location to write = %lu and should be %d\n",
+           llio.location, 100 + llio.top_dir_rec.key.total_bytes + 
+           llio.streamer_record.key.total_bytes);
+
     write_free_segments_record(&llio);
+    printf("location to write = %lu and should be %d\n",
+           llio.location, 100 + llio.top_dir_rec.key.total_bytes + 
+           llio.streamer_record.key.total_bytes + 
+           llio.free_segments_record.key.total_bytes);
+
     write_end_byte(&llio);
+    printf("location to write = %lu and should be %d\n",
+           llio.location, 100 + llio.top_dir_rec.key.total_bytes + 
+           llio.streamer_record.key.total_bytes + 
+           llio.free_segments_record.key.total_bytes + 1);
+
     write_top_dir_record(&llio);
     write_file_header(&llio);
     close_from_write(&llio);

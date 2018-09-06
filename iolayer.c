@@ -165,6 +165,7 @@ void write_streamer_record(struct llio_t *llio) {
     llio->location += llio->streamer_record.key.total_bytes;
     llio->header.seek_info = llio->streamer_record.key.seek_key;
     llio->header.nbytes_info = llio->streamer_record.key.total_bytes;
+
     free(tmp);
 }
 
