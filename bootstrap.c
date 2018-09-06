@@ -363,7 +363,7 @@ void to_buf_key(char **buffer, struct PKey *pkey) {
 
 uint32_t size_key(struct PKey *pkey) {
     uint32_t nbytes = 22;
-    if (pkey->version > 1000) nbytes += 8;
+//    if (pkey->version <= 1000) nbytes += 8;
     nbytes += size_in_bytes_string(&pkey->class_name) 
         + size_in_bytes_string(&pkey->obj_name) 
         + size_in_bytes_string(&pkey->obj_title)
@@ -375,6 +375,7 @@ uint32_t size_key(struct PKey *pkey) {
 // uuid
 //
 void print_uuid(struct PUUID *uuid) {
+    print_u32(uuid->version);
     print_u32(uuid->time_low);
     print_u16(uuid->time_mid);
     print_u16(uuid->time_hi_and_version);
@@ -384,11 +385,14 @@ void print_uuid(struct PUUID *uuid) {
         print_uchar((uuid->node)[i]);
 }
 
-void ctor_uuid(struct PUUID *uuid) {}
+void ctor_uuid(struct PUUID *uuid) {
+    uuid->version = 1;
+}
 
 void dtor_uuid(struct PUUID *uuid) {}
 
 void from_buf_uuid(char **buffer, struct PUUID * uuid) {
+    uuid->version = get_version(buffer);
     uuid->time_low = get_u32(buffer);
     uuid->time_mid = get_u16(buffer);
     uuid->time_hi_and_version = get_u16(buffer);
@@ -399,6 +403,7 @@ void from_buf_uuid(char **buffer, struct PUUID * uuid) {
 }
 
 void to_buf_uuid(char **buffer, struct PUUID *uuid) {
+    put_version(buffer, uuid->version);
     put_u32(buffer, uuid->time_low);
     put_u16(buffer, uuid->time_mid);
     put_u8(buffer, uuid->time_hi_and_version);
@@ -409,7 +414,7 @@ void to_buf_uuid(char **buffer, struct PUUID *uuid) {
 }
 
 uint32_t size_uuid(struct PUUID* ppuid) {
-    return 16u;
+    return 18;
 }
 
 //
@@ -417,6 +422,7 @@ uint32_t size_uuid(struct PUUID* ppuid) {
 //
 void ctor_dir(struct PDirectory *pdir) {
     pdir->version = 5;
+    ctor_uuid(&pdir->uuid);
     ctor_fromval_datime(&pdir->date_time_c, 1234);
     ctor_fromval_datime(&pdir->date_time_m, 1234);
 }
@@ -478,7 +484,7 @@ void to_buf_dir(char **buffer, struct PDirectory *pdir) {
 uint32_t size_dir(struct PDirectory *pdir) {
     // version (just short) + nbytes_keys + nbytes_name + seek_dir + seek_parent + seek_keys (as int)
     int nbytes = 22; 
-    if (pdir->version > 1000)
+    if (pdir->version <= 1000)
         nbytes += 12;
     nbytes += size_datime(&pdir->date_time_c) + size_datime(&pdir->date_time_m) + size_uuid(&pdir->uuid);
     return nbytes;

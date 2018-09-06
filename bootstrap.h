@@ -169,6 +169,7 @@ struct KeyList {
 uint32_t size_keylist(struct KeyList*);
 
 struct PUUID {
+    uint16_t version;
     uint32_t time_low;
     uint16_t time_mid;
     uint16_t time_hi_and_version;
