@@ -74,6 +74,23 @@ void simulate_free_segments_record(struct llio_t *llio) {
     // key and free list are ready
 }
 
+struct keys_list_record_t simulate_keys_list_record_for_dir(struct llio_t *llio, 
+                                                            struct PDirectory *dir) {
+    // init
+    struct keys_list_record_t record; 
+    record.length = 0;
+    record.pkeys = NULL;
+
+    // generate key
+    ctor_key(&record.key);
+    record.key.seek_pdir = dir->seek_dir;
+    record.key.key_bytes = size_key(&record.key);
+    record.key.obj_bytes = 4;
+    record.key.total_bytes = record.key.obj_bytes + key.key_bytes;
+
+    return record;
+}
+
 int main(int argc, char** argv) {
     if (argc==1) {
         printf("no input file provided\n");
@@ -91,10 +108,16 @@ int main(int argc, char** argv) {
     // we simulate the streamer and free segments records
     simulate_streamer_record(&llio);
     simulate_free_segments_record(&llio);
+    struct keys_list_record_t keys_list_record = simulate_keys_list_record_for_dir(
+        &llio, &llio.top_dir_rec.dir);
 
-    printf("--- simulated streamer and free segments records ---\n");
+    printf("--- simulated streamer, free segments and top dir keys list records ---\n");
     print_key(&llio.streamer_record.key);
     print_key(&llio.free_segments_record.key);
+    print_key(&keys_list_record.key);
+
+    // write the keys list for the root/top dir
+    write_keys_list_record_for_dir(&llio, &keys_list_record, &llio.top_dir_rec.dir);
 
     // sequence of actions to do upon closing the file
     write_streamer_record(&llio);

@@ -223,3 +223,25 @@ void write_end_byte(struct llio_t* llio) {
     // postcondition
     llio->location += 1;
 }
+
+void write_keys_list_record_for_dir(struct llio_t *llio, struct keys_list_record_t *keys_list_record,
+                                    struct PDirectory *dir) {
+    fseek(llio->fctx.pfile, llio->location, SEEK_SET);
+
+    // postcondition
+    keys_list_record->key.seek_key = llio->location;
+    dir->seek_keys = llio->location;
+
+    char *buffer = malloc(keys_list_record.key.total_bytes);
+    char *tmp = buffer;
+    to_buf_key(&buffer, &keys_list_record.key);
+    put_u32(&buffer, uint32_t(keys_list_record.length));
+    for (int i=0; i<keys_list_record.length; i++)
+        to_buf_key(&buffer, &(keys_list_record.pkeys[i]));
+    root_write(llio->fctx, tmp, keys_list_record.key.total_bytes);
+
+    // postcondition
+    llio->location += keys_list_record.key.total_bytes;
+
+    free(tmp);
+}

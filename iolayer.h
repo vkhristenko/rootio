@@ -9,6 +9,12 @@ struct top_dir_record_t {
     struct PDirectory dir;
 };
 
+struct keys_list_record_t {
+    struct PKey;
+    int length;
+    struct PKey *pkeys;
+}
+
 struct generic_record_t {
     struct PKey key;
     char *blob;
@@ -68,6 +74,11 @@ void read_free_segments_record(struct llio_t*);
 void read_top_dir_record(struct llio_t*);
 
 /**
+ * 
+ */
+void read_keys_list_record_for_dir(struct llio_t*, struct PDirectory*);
+
+/**
  * Writing logic step by step:
  * 1. write header
  * 2. write top directory record (given a name, we know the full size)
@@ -98,6 +109,20 @@ void read_top_dir_record(struct llio_t*);
 // as they are written twice, at open and second time at close
 void write_file_header(struct llio_t*);
 void write_top_dir_record(struct llio_t*);
+
+/**
+ * write a keys list for a directory
+ * preconditions:
+ *   - contents of the list itself are fully generated
+ *   - the key of the key list record is generated, except for the location where to write the record.
+ *      that includes the location of the folder that this keys list is assigned to. At the time of key generation,
+ *      this location of the folder is already known, therefore must be assigned explicitly
+ *
+ * postconditions:
+ *   - directory is updated to reflect the location where keys list is written
+ *   - key of the keys list record is updated to reflect where it is written to
+ */
+void write_keys_list_record_for_dir(struct llio_t*, struct keys_list_record_t*, struct PDirectory*);
 
 // do increment the location counter
 void write_streamer_record(struct llio_t*);
