@@ -151,6 +151,14 @@ void close_from_read(struct llio_t *llio) {
 }
 
 void close_from_write(struct llio_t *llio) {
+    // actions required at closing time
+    write_streamer_record(llio);
+    write_free_segments_record(llio);
+    write_end_byte(llio);
+    write_top_dir_record(llio);
+    write_file_header(llio);
+    
+    // close the file
     close_context(llio->fctx);
 }
 
