@@ -67,6 +67,30 @@ void read_top_dir_record(struct llio_t *llio) {
     free(tmp_dir);
 }
 
+struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t *llio, struct PDirectory *dir) {
+    struct keys_list_record_t record;
+
+    fseek(llio->fctx.pfile, dir->seek_keys, SEEK_SET);
+
+    // read into memory
+    char *buffer = malloc(dir->nbytes_keys);
+    char *tmp = buffer;
+    size_t nbytes = fread(buffer, 1, dir->nbytes_keys, llio->fctx.pfile);
+
+    // deset the key + keylist
+    from_buf_key(&buffer, &record.key);
+    record.length = get_u32(&buffer);
+    if (record.length==0) {
+        record.pkeys = NULL;
+        return record;
+    }
+    record.pkeys = malloc(sizeof(struct PKey) * record.length);
+    for (int i=0; i<record.length; i++)
+        from_buf_key(&buffer, &(record.pkeys[i]));
+
+    return record;
+}
+
 struct llio_t open_to_read(char *filename) {
     struct llio_t llio;
     llio.fctx = open_context(filename, "rb");

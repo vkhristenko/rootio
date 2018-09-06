@@ -56,9 +56,12 @@ void simulate_streamer_record(struct llio_t *llio) {
 }
 
 void simulate_free_segments_record(struct llio_t *llio) {
-    // simulate 0 free segments 
-    llio->free_segments_record.pfree = NULL;
-    llio->free_segments_record.length = 0;
+    // simulate N free segments 
+    int nfree = 1;
+    llio->free_segments_record.length = nfree;
+    llio->free_segments_record.pfree = malloc(sizeof(struct PFree) * 
+        nfree);
+    ctor_pfree(llio->free_segments_record.pfree, 1000, 2000000000);
 
     // generate the key for that list
     struct PString class_name;
@@ -68,8 +71,9 @@ void simulate_free_segments_record(struct llio_t *llio) {
                        &llio->top_dir_rec.named.title);
     llio->free_segments_record.key.seek_pdir = llio->header.begin;
     llio->free_segments_record.key.key_bytes = size_key(&llio->free_segments_record.key);
-    llio->free_segments_record.key.obj_bytes = 0;
-    llio->free_segments_record.key.total_bytes = llio->free_segments_record.key.key_bytes;
+    llio->free_segments_record.key.obj_bytes = size_pfree(llio->free_segments_record.pfree);
+    llio->free_segments_record.key.total_bytes = llio->free_segments_record.key.key_bytes + 
+        llio->free_segments_record.key.obj_bytes;
 
     // key and free list are ready
 }
@@ -125,6 +129,8 @@ int main(int argc, char** argv) {
     printf("location to write = %lu and should be %d\n",
            llio.location, 100 + llio.top_dir_rec.key.total_bytes + 
            keys_list_record.key.total_bytes);
+    
+    write_top_dir_record(&llio);
 
     // sequence of actions to do upon closing the file
     write_streamer_record(&llio);
@@ -147,7 +153,6 @@ int main(int argc, char** argv) {
            llio.streamer_record.key.total_bytes + 
            llio.free_segments_record.key.total_bytes + 1);
 
-    write_top_dir_record(&llio);
     write_file_header(&llio);
     close_from_write(&llio);
     

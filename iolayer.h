@@ -76,7 +76,7 @@ void read_top_dir_record(struct llio_t*);
 /**
  * 
  */
-void read_keys_list_record_for_dir(struct llio_t*, struct PDirectory*);
+struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t*, struct PDirectory*);
 
 /**
  * Writing logic step by step:
