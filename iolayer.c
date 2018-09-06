@@ -246,7 +246,7 @@ void write_end_byte(struct llio_t* llio) {
 
     // write
     char *end = "v";
-    root_write(llio->fctx, end, 1);
+//    root_write(llio->fctx, end, 1);
 
     // postcondition
     llio->location += 1;

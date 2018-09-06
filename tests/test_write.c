@@ -88,7 +88,11 @@ struct keys_list_record_t simulate_keys_list_record_for_dir(struct llio_t *llio,
     record.pkeys = NULL;
 
     // generate key
-    ctor_key(&record.key);
+    struct PString class_name;
+    ctor_withnames_key(&record.key, 
+                       &llio->top_dir_rec.key.class_name, 
+                       &llio->top_dir_rec.named.name, 
+                       &llio->top_dir_rec.named.title);
     record.key.seek_pdir = dir->seek_dir;
     record.key.key_bytes = size_key(&record.key);
     record.key.obj_bytes = 4;

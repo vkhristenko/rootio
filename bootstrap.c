@@ -208,6 +208,7 @@ void print_file_header(struct PFileHeader *pheader) {
 }
 
 void ctor_file_header(struct PFileHeader *pheader) {
+    pheader->version = 61103;
     pheader->begin = 100;
     pheader->units = 4;
     pheader->compress = 1;
