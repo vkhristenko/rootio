@@ -20,9 +20,9 @@ export topdir
 export includedirs
 export libs
 
-.PHONY: tests clean
+.PHONY: test_c clean
 
-all: $(lib) tests
+all: $(lib) test_c
 
 $(lib): $(objects)
 	$(cc) $(ldflags) -o $@ $^ $(libs)
@@ -30,9 +30,9 @@ $(lib): $(objects)
 $.o: %.c
 	$(cc) $(cflags) -c -o $@ $^
 
-tests:
-	cd tests && $(MAKE)
+test_c:
+	cd test_c && $(MAKE)
 
 clean:
 	rm $(objects) $(lib)
-	cd tests && $(MAKE) clean
+	cd test_c && $(MAKE) clean
