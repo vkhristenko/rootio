@@ -1,4 +1,5 @@
 #include "aux.h"
+#include <inttypes.h>
 
 void swap_16(char *src, char *dest) {
     dest[0] = src[1];
@@ -125,7 +126,8 @@ void put_version(char **ptr, uint16_t version) {
 }
 
 int get_string(char **src, char **dest) {
-    int8_t size = **src; (*src)++;
+    uint8_t size = **src; (*src)++;
+    uint8_t minus_one = -1;
 
     // If the string is empty
     if (size == 0) {
@@ -135,7 +137,7 @@ int get_string(char **src, char **dest) {
     }
     
     // if more input is needed
-    if (size == -1) {
+    if (size == minus_one) {
         int size = get_i32(src); 
         (*dest) = malloc(size);
         memcpy(*dest, *src, size);

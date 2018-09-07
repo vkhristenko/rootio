@@ -114,9 +114,40 @@ struct directory_record_t read_dir_record_by_key(struct llio_t *llio, struct key
     return record;
 }
 
+struct generic_record_t read_generic_record_by_location(struct llio_t *llio, uint64_t location) {
+    struct generic_record_t record;
+
+    // read into mem
+    // first read the 4 bytes for total_bytes per record
+    // then, the bytes for the record - 4
+    fseek(llio->fctx.pfile, location, SEEK_SET);
+    char total_bytes[4];
+    char *tmptmp = total_bytes;
+    size_t nbytes = fread(tmptmp, 1, 4, llio->fctx.pfile);
+    uint32_t nbytes_total = get_u32((char**)&tmptmp);
+    char *buffer = malloc(nbytes_total); char *tmp = buffer;
+    memcpy(buffer, total_bytes, 4); buffer+=4;
+    nbytes = fread(buffer, 1, nbytes_total - 4, llio->fctx.pfile);
+    buffer -= 4;
+
+    // deser the key
+    from_buf_key(&buffer, &record.key);
+    record.blob = buffer;
+
+    // note we do not deallocate the blob
+    return record;
+}
+
 struct llio_t open_to_read(char *filename) {
     struct llio_t llio;
     llio.fctx = open_context(filename, "rb");
+
+    /* initialization section */
+    read_file_header(&llio);
+    read_streamer_record(&llio);
+    read_free_segments_record(&llio);
+    read_top_dir_record(&llio);
+
     return llio;
 }
 

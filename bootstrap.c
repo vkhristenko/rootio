@@ -364,7 +364,7 @@ void to_buf_key(char **buffer, struct key_t *pkey) {
 
 uint32_t size_key(struct key_t *pkey) {
     uint32_t nbytes = 22;
-//    if (pkey->version <= 1000) nbytes += 8;
+    if (pkey->version > 1000) nbytes += 8;
     nbytes += size_in_bytes_string(&pkey->class_name) 
         + size_in_bytes_string(&pkey->obj_name) 
         + size_in_bytes_string(&pkey->obj_title)

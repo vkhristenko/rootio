@@ -80,6 +80,7 @@ void read_top_dir_record(struct llio_t*);
 
 //
 struct directory_record_t read_dir_record_by_key(struct llio_t *, struct key_t*);
+struct generic_record_t read_generic_record_by_location(struct llio_t*, uint64_t);
 
 /**
  * 

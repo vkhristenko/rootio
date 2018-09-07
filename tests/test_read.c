@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
 
     struct llio_t llio = open_to_read(filename);
 
+    /*
     read_file_header(&llio);
     print_file_header(&llio.header);
 
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
     print_dir(&llio.top_dir_rec.dir);
 
     printf("\n--- ---- ---\n\n");
-
+*/
     recurse(&llio, &llio.top_dir_rec.dir);
 
     /*
