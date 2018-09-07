@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
     char *filename = argv[1];
     printf("filename = %s\n", filename);
 
-    struct FileContext ctx = open_context(filename, "rb");
+    struct file_context_t ctx = open_context(filename, "rb");
     dump_contents(ctx);
 
     close_context(ctx);

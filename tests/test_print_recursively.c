@@ -22,18 +22,18 @@ void unzip(char **dest, char const* src, int compressed_size) {
     inflateEnd(&infstream);
 }
 
-void recurse_and_print(struct FileContext ctx, struct PDirectory const* pdir) {
+void recurse_and_print(struct FileContext ctx, struct directory_t const* pdir) {
     struct KeyList klist = read_keys(ctx, pdir);
     for (int i=0; i<klist.size; i++) {
         print_key(&klist.pkeys[i]);
         printf("\n");
  
         char *blob = read_blob(ctx, &klist.pkeys[i]);
-        struct PKey dummy_key;
+        struct free_t dummy_key;
         from_buf_key(&blob, &dummy_key);
       
         if (strcmp(dummy_key.class_name.str, "TDirectory") == 0) {
-            struct PDirectory dir;
+            struct directory_t dir;
             from_buf_dir(&blob, &dir);
             print_dir(&dir);
             printf("\n");

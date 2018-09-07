@@ -15,7 +15,7 @@ void test_streamerinfo(struct FileContext ctx, struct TopDirectory const* root) 
 
     dump_raw(buffer, nbytes, 25);
 
-    struct PKey key_info;
+    struct free_t key_info;
     from_buf_key(&buffer, &key_info);
     print_key(&key_info);
 
@@ -39,7 +39,7 @@ void test_streamerinfo(struct FileContext ctx, struct TopDirectory const* root) 
     printf("value = %u\n", get_u32(&buffer_to_use)); 
     printf("value = %u\n", get_u32(&buffer_to_use));
 
-    struct PString str;
+    struct string_t str;
     from_buf_pstring(&buffer_to_use, &str);
     print_pstring(&str);
 

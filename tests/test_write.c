@@ -5,7 +5,7 @@
 #include "iolayer.h"
 #include "aux.h"
 
-struct generic_record_t simulate_keylist_record(struct PDirectory* pdir) {
+struct generic_record_t simulate_keylist_record(struct directory_t* pdir) {
     struct generic_record_t record;
 
     return record;
@@ -18,11 +18,11 @@ void simulate_streamer_record(struct llio_t *llio) {
     // simulate blob
     uint32_t n_sinfo = 0u;
     int16_t version_sinfo = 5;
-    struct PObject obj;
+    struct object_t obj;
     obj.version = 2;
     obj.id = 0x1111;
     obj.bits = 0x1111;
-    struct PString str_sinfo;
+    struct string_t str_sinfo;
     str_sinfo.size = 0;
     int byte_count = 0;
     uint32_t nbytes_sinfo = size_object(&obj) + 
@@ -41,7 +41,7 @@ void simulate_streamer_record(struct llio_t *llio) {
     llio->streamer_record.blob = tmp_sinfo;
     
     // generate a key for that blob
-    struct PString class_name, obj_name, title_name;
+    struct string_t class_name, obj_name, title_name;
     char *streamer = "StreamerInfo";
     char *tlist = "Doubly linked list";
     ctor_nomemcopy_pstring(&class_name, "TList", 5);
@@ -61,12 +61,12 @@ void simulate_free_segments_record(struct llio_t *llio) {
     // simulate N free segments 
     int nfree = 1;
     llio->free_segments_record.length = nfree;
-    llio->free_segments_record.pfree = malloc(sizeof(struct PFree) * 
+    llio->free_segments_record.pfree = malloc(sizeof(struct free_t) * 
         nfree);
     ctor_pfree(llio->free_segments_record.pfree, 1000, 2000000000);
 
     // generate the key for that list
-    struct PString class_name;
+    struct string_t class_name;
     ctor_nomemcopy_pstring(&class_name, "TFile", 5);
     ctor_withnames_key(&llio->free_segments_record.key, &class_name, 
                        &llio->top_dir_rec.named.name, 
@@ -81,7 +81,7 @@ void simulate_free_segments_record(struct llio_t *llio) {
 }
 
 struct keys_list_record_t simulate_keys_list_record_for_dir(struct llio_t *llio, 
-                                                            struct PDirectory *dir) {
+                                                            struct directory_t *dir) {
     // init
     struct keys_list_record_t record; 
     record.length = 0;
