@@ -22,14 +22,14 @@ void unzip(char **dest, char const* src, int compressed_size) {
     inflateEnd(&infstream);
 }
 
-void recurse_and_print(struct FileContext ctx, struct directory_t const* pdir) {
-    struct KeyList klist = read_keys(ctx, pdir);
+void recurse_and_print(struct file_context_t ctx, struct directory_t const* pdir) {
+    struct key_list_t klist = read_keys(ctx, pdir);
     for (int i=0; i<klist.size; i++) {
         print_key(&klist.pkeys[i]);
         printf("\n");
  
         char *blob = read_blob(ctx, &klist.pkeys[i]);
-        struct free_t dummy_key;
+        struct key_t dummy_key;
         from_buf_key(&blob, &dummy_key);
       
         if (strcmp(dummy_key.class_name.str, "TDirectory") == 0) {
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
     char *filename = argv[1];
     printf("filename = %s\n", filename);
 
-    struct FileContext ctx = open_context(filename, "rb");
+    struct file_context_t ctx = open_context(filename, "rb");
 
     struct TopDirectory_v2 root = read_top_dir_v2(ctx);
     print_file_header(&root.header);

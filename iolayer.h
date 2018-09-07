@@ -39,7 +39,7 @@ struct streamer_record_t {
 struct free_segments_record_t {
     struct key_t key;
     int length;
-    struct PFree *pfree;
+    struct free_t *pfree;
 };
 
 struct llio_t {
