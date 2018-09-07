@@ -79,7 +79,7 @@ void read_free_segments_record(struct llio_t*);
 void read_top_dir_record(struct llio_t*);
 
 //
-struct directory_record_t read_dir_record_by_key(struct directory_record_t *, struct key_t*);
+struct directory_record_t read_dir_record_by_key(struct llio_t *, struct key_t*);
 
 /**
  * 

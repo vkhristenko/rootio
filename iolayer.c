@@ -94,7 +94,7 @@ struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t *llio, str
     return record;
 }
 
-struct directory_record_t read_dir_record_by_key(struct directory_record_t *dir_record, struct key_t *key) {
+struct directory_record_t read_dir_record_by_key(struct llio_t *llio, struct key_t *key) {
     struct directory_record_t record;
 
     fseek(llio->fctx.pfile, key->seek_key, SEEK_SET);
@@ -320,5 +320,5 @@ void write_directory_record(struct llio_t *llio, struct directory_record_t *dir_
 
     // postconditions
     llio->location += dir_record->key.total_bytes;
-    free(tmp)
+    free(tmp);
 }
