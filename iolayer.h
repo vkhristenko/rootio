@@ -9,6 +9,11 @@ struct top_dir_record_t {
     struct directory_t dir;
 };
 
+struct directory_record_t {
+    struct key_t key;
+    struct directory_t dir;
+};
+
 struct keys_list_record_t {
     struct key_t key;
     int length;
@@ -73,6 +78,9 @@ void read_streamer_record(struct llio_t*);
 void read_free_segments_record(struct llio_t*);
 void read_top_dir_record(struct llio_t*);
 
+//
+struct directory_record_t read_dir_record_by_key(struct directory_record_t *, struct key_t*);
+
 /**
  * 
  */
@@ -131,5 +139,6 @@ void write_end_byte(struct llio_t*);
 
 // writing a generic record: key + blob
 void write_generic_record(struct llio_t*, struct generic_record_t *);
+void write_directory_record(struct llio_t*, struct directory_record_t*);
 
 #endif // iolayer_h

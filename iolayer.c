@@ -88,6 +88,29 @@ struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t *llio, str
     for (int i=0; i<record.length; i++)
         from_buf_key(&buffer, &(record.pkeys[i]));
 
+    // postcondition: free resources
+    free(tmp);
+
+    return record;
+}
+
+struct directory_record_t read_dir_record_by_key(struct directory_record_t *dir_record, struct key_t *key) {
+    struct directory_record_t record;
+
+    fseek(llio->fctx.pfile, key->seek_key, SEEK_SET);
+
+    // read into mem
+    char *buffer = malloc(key->total_bytes);
+    char *tmp = buffer;
+    size_t nbytes = fread(buffer, 1, key->total_bytes, llio->fctx.pfile);
+
+    // deser Key + dir
+    from_buf_key(&buffer, &record.key);
+    from_buf_dir(&buffer, &record.dir);
+
+    // postcondition
+    free(tmp);
+
     return record;
 }
 
@@ -279,6 +302,23 @@ void write_keys_list_record_for_dir(struct llio_t *llio, struct keys_list_record
 
     // postcondition
     llio->location += keys_list_record->key.total_bytes;
-
     free(tmp);
+}
+
+void write_directory_record(struct llio_t *llio, struct directory_record_t *dir_record) {
+    fseek(llio->fctx.pfile, llio->location, SEEK_SET);
+
+    // postcondition
+    dir_record->key.seek_key = llio->location;
+
+    // deser + write
+    char *buffer = malloc(dir_record->key.total_bytes);
+    char *tmp = buffer;
+    to_buf_key(&buffer, &dir_record->key);
+    to_buf_dir(&buffer, &dir_record->dir);
+    root_write(llio->fctx, tmp, dir_record->key.total_bytes);
+
+    // postconditions
+    llio->location += dir_record->key.total_bytes;
+    free(tmp)
 }
