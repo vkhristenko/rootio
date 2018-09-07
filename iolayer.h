@@ -4,19 +4,19 @@
 #include "bootstrap.h"
 
 struct top_dir_record_t {
-    struct PKey key;
-    struct PNamed named;
-    struct PDirectory dir;
+    struct key_t key;
+    struct named_t named;
+    struct directory_t dir;
 };
 
 struct keys_list_record_t {
-    struct PKey key;
+    struct key_t key;
     int length;
-    struct PKey *pkeys;
+    struct key_t *pkeys;
 };
 
 struct generic_record_t {
-    struct PKey key;
+    struct key_t key;
     char *blob;
 };
 
@@ -25,7 +25,7 @@ struct generic_record_t {
  *   Key + TList of StreamerElements
  */
 struct streamer_record_t {
-    struct PKey key;
+    struct key_t key;
     // blob points to the location where TList of Streamers starts
     // to free the acquired space, move blob pointer back by key_bytes: blob -= key.key_bytes and then free
     char *blob;
@@ -37,7 +37,7 @@ struct streamer_record_t {
  *   to modify the objects on disk -> for instance root allows to delete a record from disk
  */
 struct free_segments_record_t {
-    struct PKey key;
+    struct key_t key;
     int length;
     struct PFree *pfree;
 };
@@ -46,9 +46,9 @@ struct llio_t {
     // owns
     uint64_t location;
     // owns
-    struct FileContext fctx;
+    struct file_context_t fctx;
     // owns
-    struct PFileHeader header;
+    struct file_header_t header;
     // owns
     struct top_dir_record_t top_dir_rec;
     // when reading -> read a blob and provide to the higher layer
@@ -76,7 +76,7 @@ void read_top_dir_record(struct llio_t*);
 /**
  * 
  */
-struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t*, struct PDirectory*);
+struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t*, struct directory_t*);
 
 /**
  * Writing logic step by step:
@@ -122,7 +122,7 @@ void write_top_dir_record(struct llio_t*);
  *   - directory is updated to reflect the location where keys list is written
  *   - key of the keys list record is updated to reflect where it is written to
  */
-void write_keys_list_record_for_dir(struct llio_t*, struct keys_list_record_t*, struct PDirectory*);
+void write_keys_list_record_for_dir(struct llio_t*, struct keys_list_record_t*, struct directory_t*);
 
 // do increment the location counter
 void write_streamer_record(struct llio_t*);

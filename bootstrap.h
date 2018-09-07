@@ -7,7 +7,7 @@
 //
 // file context
 //
-struct FileContext {
+struct file_context_t {
     FILE *pfile;
 };
 
@@ -19,102 +19,102 @@ struct FileContext {
 
 /**
  * Assumptions about these simple strings:
- *   1. whenever struct PString* is passed to a ctor of some type,
+ *   1. whenever struct string_t* is passed to a ctor of some type,
  *      it is expected that it takes ownership of it. Meaning can pass w/o memcopy.
  * TODO: our string implementation is flawed due to trying to free multiple times the same string
  */
-struct PString {
+struct string_t {
     int size;
     char *str;
 };
 
-void print_pstring(struct PString*);
-void from_buf_pstring(char **buffer, struct PString* pstring);
-void to_buf_pstring(char **buffer, struct PString const* pstring);
-void ctor_pstring(struct PString*);
-void ctor_nomemcopy_pstring(struct PString *ppstr, char *pstr, int size);
-void ctor_memcopy_pstring(struct PString *ppstr, char *pstr, int size);
+void print_pstring(struct string_t*);
+void from_buf_pstring(char **buffer, struct string_t* pstring);
+void to_buf_pstring(char **buffer, struct string_t const* pstring);
+void ctor_pstring(struct string_t*);
+void ctor_nomemcopy_pstring(struct string_t *ppstr, char *pstr, int size);
+void ctor_memcopy_pstring(struct string_t *ppstr, char *pstr, int size);
 
 /**
  * note: should only be called once when u own this string, as we do not enforce copying
  */
-void dtor_pstring(struct PString*);
-uint32_t size_in_bytes_string(struct PString *);
-uint32_t size_pstring(struct PString *); 
+void dtor_pstring(struct string_t*);
+uint32_t size_in_bytes_string(struct string_t *);
+uint32_t size_pstring(struct string_t *); 
 
 //
 // Free Segment 
 //
-struct PFree {
+struct free_t {
     uint16_t version;
     uint64_t begin, end;
 };
 
-void print_pfree(struct PFree*);
-void from_buf_pfree(char **, struct PFree*);
-void to_buf_pfree(char **, struct PFree*);
-uint32_t size_pfree(struct PFree*);
-void ctor_pfree(struct PFree*, uint64_t begin, uint64_t end);
+void print_pfree(struct free_t*);
+void from_buf_pfree(char **, struct free_t*);
+void to_buf_pfree(char **, struct free_t*);
+uint32_t size_pfree(struct free_t*);
+void ctor_pfree(struct free_t*, uint64_t begin, uint64_t end);
 
 // singly-linked list
-struct PFreeNode {
-    struct PFree pfree;
-    struct PFreeNode* next;
+struct free_node_t {
+    struct free_t pfree;
+    struct free_node_t* next;
 };
 
-void ctor_pfreenode(struct PFreeNode* node);
+void ctor_pfreenode(struct free_node_t* node);
 
 //
-// PObject
+// object_t
 //
-struct PObject {
+struct object_t {
     uint16_t version;
     uint32_t id;
     uint32_t bits;
 };
 
-uint32_t size_object(struct PObject*);
-void from_buf_object(char ** buffer, struct PObject *);
-void to_buf_object(char ** buffer, struct PObject*);
+uint32_t size_object(struct object_t*);
+void from_buf_object(char ** buffer, struct object_t *);
+void to_buf_object(char ** buffer, struct object_t*);
 
 //
-// PDatime
+// datime_t
 //
-struct PDatime {
-    struct PObject object;
+struct datime_t {
+    struct object_t object;
     uint32_t raw;
 };
 
-void print_datime(struct PDatime *pdatime);
-void from_buf_datime(char **buffer, struct PDatime *pdatime);
-void to_buf_datime(char **buffer, struct PDatime *pdatime);
-void ctor_datime(struct PDatime *pdatime);
-void ctor_fromval_datime(struct PDatime*, int32_t);
-void dtor_datime(struct PDatime *pdatime);
-uint32_t size_datime(struct PDatime*);
+void print_datime(struct datime_t *pdatime);
+void from_buf_datime(char **buffer, struct datime_t *pdatime);
+void to_buf_datime(char **buffer, struct datime_t *pdatime);
+void ctor_datime(struct datime_t *pdatime);
+void ctor_fromval_datime(struct datime_t*, int32_t);
+void dtor_datime(struct datime_t *pdatime);
+uint32_t size_datime(struct datime_t*);
 
 //
-// PNamed
+// named_t
 //
-struct PNamed {
-    struct PObject object;
-    struct PString name;
-    struct PString title;
+struct named_t {
+    struct object_t object;
+    struct string_t name;
+    struct string_t title;
 };
 
-void print_named(struct PNamed *pnamed);
-void from_buf_named(char **buffer, struct PNamed *pnamed);
-void to_buf_named(char **buffer, struct PNamed *pnamed);
-void ctor_named(struct PNamed *pnamed);
-void ctor_frompstring_named(struct PNamed*, struct PString*, struct PString*);
-void dtor_named(struct PNamed *pnamed);
-uint32_t size_named(struct PNamed*);
+void print_named(struct named_t *pnamed);
+void from_buf_named(char **buffer, struct named_t *pnamed);
+void to_buf_named(char **buffer, struct named_t *pnamed);
+void ctor_named(struct named_t *pnamed);
+void ctor_frompstring_named(struct named_t*, struct string_t*, struct string_t*);
+void dtor_named(struct named_t *pnamed);
+uint32_t size_named(struct named_t*);
 
 //
 // file header 
 //
-struct PFileHeader {
-    struct PObject object;
+struct file_header_t {
+    struct object_t object;
     uint32_t version;
     uint32_t begin;
     uint64_t end;
@@ -128,47 +128,47 @@ struct PFileHeader {
     uint32_t nbytes_info;
 };
 
-void print_file_header(struct PFileHeader *pheader);
-void ctor_file_header(struct PFileHeader *pheader);
-void dtor_file_header(struct PFileHeader *pheader);
-void from_buf_file_header(char **buffer, struct PFileHeader *pheader);
-void to_buf_file_header(char **buffer, struct PFileHeader *pheader);
+void print_file_header(struct file_header_t *pheader);
+void ctor_file_header(struct file_header_t *pheader);
+void dtor_file_header(struct file_header_t *pheader);
+void from_buf_file_header(char **buffer, struct file_header_t *pheader);
+void to_buf_file_header(char **buffer, struct file_header_t *pheader);
 
 //
 // key product
 //
-struct PKey {
-    struct PObject object;
+struct key_t {
+    struct object_t object;
     uint32_t total_bytes;
     int32_t version;
     uint32_t obj_bytes;
-    struct PDatime date_time;
+    struct datime_t date_time;
     uint16_t key_bytes;
     uint16_t cycle;
     uint64_t seek_key;
     uint64_t seek_pdir;
-    struct PString class_name;
-    struct PString obj_name;
-    struct PString obj_title;
+    struct string_t class_name;
+    struct string_t obj_name;
+    struct string_t obj_title;
 };
 
-void print_key(struct PKey *pkey);
-void ctor_key(struct PKey *pkey);
-void ctor_withnames_key(struct PKey *pkey, struct PString* pclass_name, struct PString *pobj_name, 
-                        struct PString *pobj_title);
-void dtor_key(struct PKey *pkey);
-void from_buf_key(char **buffer, struct PKey *pkey);
-void to_buf_key(char **buffer, struct PKey*);
-uint32_t size_key(struct PKey*);
+void print_key(struct key_t *pkey);
+void ctor_key(struct key_t *pkey);
+void ctor_withnames_key(struct key_t *pkey, struct string_t* pclass_name, struct string_t *pobj_name, 
+                        struct string_t *pobj_title);
+void dtor_key(struct key_t *pkey);
+void from_buf_key(char **buffer, struct key_t *pkey);
+void to_buf_key(char **buffer, struct key_t*);
+uint32_t size_key(struct key_t*);
 
-struct KeyList {
+struct key_list_t {
     int size;
-    struct PKey *pkeys;
+    struct key_t *pkeys;
 };
 
-uint32_t size_keylist(struct KeyList*);
+uint32_t size_keylist(struct key_list_t*);
 
-struct PUUID {
+struct uuid_t {
     uint32_t version;
     uint32_t time_low;
     uint16_t time_mid;
@@ -178,71 +178,71 @@ struct PUUID {
     uint8_t node[6];
 };
 
-void print_uuid(struct PUUID *uuid);
-void ctor_uuid(struct PUUID *uuid);
-void dtor_uuid(struct PUUID *);
-void from_buf_uuid(char **buffer, struct PUUID *);
-void to_buf_uuid(char **buffer, struct PUUID *);
-uint32_t size_uuid(struct PUUID*);
+void print_uuid(struct uuid_t *uuid);
+void ctor_uuid(struct uuid_t *uuid);
+void dtor_uuid(struct uuid_t *);
+void from_buf_uuid(char **buffer, struct uuid_t *);
+void to_buf_uuid(char **buffer, struct uuid_t *);
+uint32_t size_uuid(struct uuid_t*);
 
 //
 // directory product
 //
-struct PDirectory {
-    struct PObject object;
+struct directory_t {
+    struct object_t object;
     uint32_t version;
-    struct PDatime date_time_c;
-    struct PDatime date_time_m;
+    struct datime_t date_time_c;
+    struct datime_t date_time_m;
     uint32_t nbytes_keys;
     uint32_t nbytes_name;
     uint64_t seek_dir;
     uint64_t seek_parent;
     uint64_t seek_keys;
-    struct PUUID uuid;
+    struct uuid_t uuid;
 };
 
-void ctor_dir(struct PDirectory *pdir);
-void dtor_dir(struct PDirectory *pdir);
-void print_dir(struct PDirectory *pdir);
-void from_buf_dir(char **buffer, struct PDirectory *pdir);
-void to_buf_dir(char **buffer, struct PDirectory *pdir);
-uint32_t size_dir(struct PDirectory*);
+void ctor_dir(struct directory_t *pdir);
+void dtor_dir(struct directory_t *pdir);
+void print_dir(struct directory_t *pdir);
+void from_buf_dir(char **buffer, struct directory_t *pdir);
+void to_buf_dir(char **buffer, struct directory_t *pdir);
+uint32_t size_dir(struct directory_t*);
 
 //
 // Bootstrapping logic / functionality passing style
 //
 struct TopDirectory_v2 {
-    struct PFileHeader header;
-    struct PKey key;
-    struct PNamed named;
-    struct PDirectory dir;
+    struct file_header_t header;
+    struct key_t key;
+    struct named_t named;
+    struct directory_t dir;
 };
 
 struct TopDirectory {
-    struct PFileHeader header;
-    struct PDirectory dir;
+    struct file_header_t header;
+    struct directory_t dir;
 };
 
-void get_top_dir(struct FileContext ctx, struct PDirectory *pdir);
-void list_keys(struct FileContext ctx, struct PDirectory *pdir, 
-               struct PKey ** pkeys, int *pnkeys);
-void get_blob(struct FileContext ctx, struct PKey *pkey, char **blob);
-void dump_contents(struct FileContext ctx);
+void get_top_dir(struct file_context_t ctx, struct directory_t *pdir);
+void list_keys(struct file_context_t ctx, struct directory_t *pdir, 
+               struct key_t ** pkeys, int *pnkeys);
+void get_blob(struct file_context_t ctx, struct key_t *pkey, char **blob);
+void dump_contents(struct file_context_t ctx);
 
-struct FileContext open_context(char*, char*);
-void close_context(struct FileContext);
+struct file_context_t open_context(char*, char*);
+void close_context(struct file_context_t);
 
 //
 // Bootstrapping logic / functionality return style
 //
-struct TopDirectory read_top_dir(struct FileContext);
-struct TopDirectory_v2 read_top_dir_v2(struct FileContext);
-char* read_blob(struct FileContext, struct PKey const*);
-struct KeyList read_keys(struct FileContext, struct PDirectory const*);
+struct TopDirectory read_top_dir(struct file_context_t);
+struct TopDirectory_v2 read_top_dir_v2(struct file_context_t);
+char* read_blob(struct file_context_t, struct key_t const*);
+struct key_list_t read_keys(struct file_context_t, struct directory_t const*);
 
-void root_reserve_at_location(struct FileContext, long location, int size);
-void root_reserve(struct FileContext, int size);
-void root_write(struct FileContext, char*, int);
-void root_write_at_location(struct FileContext, long, char*, int);
+void root_reserve_at_location(struct file_context_t, long location, int size);
+void root_reserve(struct file_context_t, int size);
+void root_write(struct file_context_t, char*, int);
+void root_write_at_location(struct file_context_t, long, char*, int);
 
 #endif // bootstrap_h

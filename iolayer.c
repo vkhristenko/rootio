@@ -37,7 +37,7 @@ void read_free_segments_record(struct llio_t* llio) {
     from_buf_key(&buffer, &llio->free_segments_record.key);
     llio->free_segments_record.length = llio->header.nfree;
     llio->free_segments_record.pfree = malloc(llio->free_segments_record.key.obj_bytes);
-    struct PFree *ifree = llio->free_segments_record.pfree;
+    struct free_t *ifree = llio->free_segments_record.pfree;
     for (int i=0; i<llio->header.nfree; i++) {
          from_buf_pfree(&buffer, &(ifree[i]));
     }
@@ -57,7 +57,7 @@ void read_top_dir_record(struct llio_t *llio) {
 
     // read and deser the directory
     fseek(llio->fctx.pfile, llio->header.begin+llio->header.nbytes_name, SEEK_SET);
-    struct PKey *key = &llio->top_dir_rec.key;
+    struct key_t *key = &llio->top_dir_rec.key;
     char *buffer_dir = malloc(key->total_bytes - llio->header.nbytes_name);
     nbytes = fread(buffer_dir, 1, key->total_bytes - llio->header.nbytes_name, llio->fctx.pfile);
     char *tmp_dir = buffer_dir;
@@ -67,7 +67,7 @@ void read_top_dir_record(struct llio_t *llio) {
     free(tmp_dir);
 }
 
-struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t *llio, struct PDirectory *dir) {
+struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t *llio, struct directory_t *dir) {
     struct keys_list_record_t record;
 
     fseek(llio->fctx.pfile, dir->seek_keys, SEEK_SET);
@@ -84,7 +84,7 @@ struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t *llio, str
         record.pkeys = NULL;
         return record;
     }
-    record.pkeys = malloc(sizeof(struct PKey) * record.length);
+    record.pkeys = malloc(sizeof(struct key_t) * record.length);
     for (int i=0; i<record.length; i++)
         from_buf_key(&buffer, &(record.pkeys[i]));
 
@@ -111,7 +111,7 @@ struct llio_t open_to_write(char *filename) {
     ctor_file_header(&llio.header);
     
     // top dir record init
-    struct PString class_name, obj_name, title_name;
+    struct string_t class_name, obj_name, title_name;
     class_name.str = "TFile"; class_name.size = 5;
     obj_name.str = filename; obj_name.size = strlen(filename);
     title_name.str = ""; title_name.size = 0;
@@ -119,7 +119,7 @@ struct llio_t open_to_write(char *filename) {
     ctor_frompstring_named(&llio.top_dir_rec.named, &obj_name, &title_name);
     ctor_dir(&llio.top_dir_rec.dir);
 
-    /* after the initialization above -> sizes of PKey, PNamed and PDirectory are known */
+    /* after the initialization above -> sizes of key_t, named_t and directory_t are known */
     /* the only thing directory needs to be in a final state is to also have seek_keys available */
     // top dir record assign the rest of values/sizes
     llio.top_dir_rec.key.seek_key = llio.header.begin;
@@ -261,7 +261,7 @@ void write_end_byte(struct llio_t* llio) {
 }
 
 void write_keys_list_record_for_dir(struct llio_t *llio, struct keys_list_record_t *keys_list_record,
-                                    struct PDirectory *dir) {
+                                    struct directory_t *dir) {
     fseek(llio->fctx.pfile, llio->location, SEEK_SET);
 
     // postcondition
