@@ -223,6 +223,9 @@ struct TopDirectory {
     struct directory_t dir;
 };
 
+/**
+ * TODO: remove what is not used
+ */
 void get_top_dir(struct file_context_t ctx, struct directory_t *pdir);
 void list_keys(struct file_context_t ctx, struct directory_t *pdir, 
                struct key_t ** pkeys, int *pnkeys);
