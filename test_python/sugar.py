@@ -86,6 +86,36 @@ class FileHeader(Structure):
         self.seek_info = seek_info
         self.nbytes_info = nbytes_info
 
+class Key(Structure):
+    _fields_ = [
+        ("object", Object),
+        ("total_bytes", ctypes.c_uint32),
+        ("version", ctypes.c_int32),
+        ("obj_bytes", ctypes.c_uint32),
+        ("date_time", Datime),
+        ("key_bytes", ctypes.c_uint16),
+        ("cycle", ctypes.c_uint16),
+        ("seek_key", ctypes.c_uint64),
+        ("seek_pdir", ctypes.c_uint64),
+        ("class_name", String),
+        ("obj_name", String),
+        ("obj_title", String)
+    ]
+
+    def __init__(self, total_bytes, version, obj_bytes, date_time, key_bytes,
+                 cycle, seek_key, seek_pdir, class_name, obj_name, obj_title):
+        self.total_bytes = total_bytes
+        self.version = version
+        self.obj_bytes = obj_bytes
+        self.date_time = date_time
+        self.key_bytes = key_bytes
+        self.cycle = cycle
+        self.seek_key = seek_key
+        self.seek_pdir = seek_pdir
+        self.class_name = class_name
+        self.obj_name = obj_name
+        self.obj_title = obj_title
+
 if __name__ == "__main__":
     context = """
     testing String class
