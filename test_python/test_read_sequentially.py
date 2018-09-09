@@ -35,7 +35,10 @@ if __name__ == "__main__":
     while location < llio.header.end:
         gen_record = read_generic_record_by_location(ctypes.pointer(llio), 
             location)
+        blob = gen_record.blob
         print gen_record.key
+
+#        blob -= 
 
     # close the file
     close_from_read(ctypes.pointer(llio))

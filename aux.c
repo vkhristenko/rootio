@@ -1,6 +1,16 @@
 #include "aux.h"
 #include <inttypes.h>
 
+void deallocate_char_p(char *ptr) 
+{
+    deallocate((void*) ptr);
+}
+
+void deallocate(void *ptr) 
+{
+    free(ptr);
+}
+
 void swap_16(char *src, char *dest) {
     dest[0] = src[1];
     dest[1] = src[0];

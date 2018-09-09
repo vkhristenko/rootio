@@ -8,6 +8,12 @@
 #include <assert.h>
 #include <stdlib.h>
 
+//
+// TODO: use libc free directly
+//
+void deallocate_char_p(char *ptr);
+void deallocate(void *);
+
 // 
 // swap the byte order
 //
