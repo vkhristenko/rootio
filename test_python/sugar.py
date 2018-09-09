@@ -243,10 +243,9 @@ class LLIO(Structure):
         self.streamer_record = streamer_record
         self.free_segments_record = free_segments_record
 
-def recurse(llio, d):
-    pass
-
 if __name__ == "__main__":
+    import sys
+
     context = """
     testing String class
     """
@@ -370,13 +369,35 @@ if __name__ == "__main__":
     """
     print context
     lib = ctypes.CDLL("../librootiobootstrap.dylib")
-    print 1
     open_to_read = wrap_cfunc(lib, "open_to_read", LLIO, ctypes.c_char_p)
     close_from_read = wrap_cfunc(lib, "close_from_read", ctypes.POINTER(LLIO))
-    print 2
-    path = "/Users/vk/software/rootiobootstrap/empty_file_from_xxxx.root"
+    path = sys.argv[1]
     obj = open_to_read(path)
     print obj
+
+    context = """
+    testing test_read.c functionality
+    """
+    print context
+    read_keys_list_record_for_dir = wrap_cfunc(lib, "read_keys_list_record_for_dir",
+                                               KeysListRecord, ctypes.POINTER(LLIO),
+                                               ctypes.POINTER(Directory))
+    read_dir_record_by_key = wrap_cfunc(lib, "read_dir_record_by_key",
+                                        DirectoryRecord, ctypes.POINTER(LLIO),
+                                        ctypes.POINTER(Key))
+    def recurse(llio, d):
+        keys_list_record = read_keys_list_record_for_dir(ctypes.pointer(llio),
+                                                         ctypes.pointer(d))
+        print keys_list_record
+        for i in range(keys_list_record.length):
+            key = keys_list_record.pkeys[i]
+            print key
+            if key.class_name.str == "TDirectory":
+                dir_record = read_dir_record_by_key(ctypes.pointer(llio), 
+                    ctypes.pointer(key))
+                print dir_record
+                recurse(llio, dir_record.dir)
+
+    recurse(obj, obj.top_dir_rec.dir)
+    
     close_from_read(ctypes.pointer(obj))
-
-
