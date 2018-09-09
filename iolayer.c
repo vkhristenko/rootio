@@ -140,6 +140,7 @@ struct generic_record_t read_generic_record_by_location(struct llio_t *llio, uin
 
 struct llio_t open_to_read(char *filename) {
     struct llio_t llio;
+    printf("filename = %s\n", filename);
     llio.fctx = open_context(filename, "rb");
 
     /* initialization section */

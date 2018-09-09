@@ -30,7 +30,7 @@ $(lib): $(objects)
 $.o: %.c
 	$(cc) $(cflags) -c -o $@ $^
 
-test_c:
+test_c: $(lib)
 	cd test_c && $(MAKE)
 
 clean:

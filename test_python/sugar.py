@@ -251,6 +251,7 @@ class LLIO(Structure):
         self.streamer_record = streamer_record
         self.free_segments_record = free_segments_record
 
+
 if __name__ == "__main__":
     context = """
     testing String class
@@ -369,3 +370,16 @@ if __name__ == "__main__":
     llio = LLIO(0, FileContext(ctypes.pointer(CFile())), header, top_dir_record,
                 streamer_record, free_segments_record)
     print llio
+    
+    context = """
+    testing opening and closing llio object
+    """
+    print context
+    lib = ctypes.CDLL("../librootiobootstrap.dylib")
+    print 1
+    open_to_read = wrap_cfunc(lib, "open_to_read", LLIO, ctypes.c_char_p)
+    print open_to_read
+    print 2
+    path = "/Users/vk/software/rootiobootstrap/empty_file_from_xxxx.root"
+    obj = open_to_read(ctypes.c_char_p(path))
+    print obj
