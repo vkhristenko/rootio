@@ -17,16 +17,6 @@ class String(Structure):
         self.str = s
         self.size = len(s)
 
-    @classmethod
-    def from_param(cls, obj):
-        """construct a String from an str"""
-        if isinstance(obj, cls):
-            return obj
-        if isinstance(obj, str):
-            return cls(obj)
-
-        raise TypeError
-
 class Free(Structure):
     _fields_ = [("version", ctypes.c_uint16), ("begin", ctypes.c_uint64),
                 ("end", ctypes.c_uint64)]
@@ -70,20 +60,22 @@ class FileHeader(Structure):
         ("seek_free", ctypes.c_uint64),
         ("nbytes_free", ctypes.c_uint32),
         ("nfree", ctypes.c_uint32),
+        ("nbytes_name", ctypes.c_uint32),
         ("units", ctypes.c_byte),
         ("compess", ctypes.c_uint32),
         ("seek_info", ctypes.c_uint64),
         ("nbytes_info", ctypes.c_uint32)
     ]
 
-    def __init__(self, version, begin, end, seek_free, nbytes_free, nfree, units,
-                 compress, seek_info, nbytes_info):
+    def __init__(self, version, begin, end, seek_free, nbytes_free, nfree, nbytes_name,
+                 units, compress, seek_info, nbytes_info):
         self.version = version
         self.begin = begin
         self.end = end
         self.seek_free = seek_free
         self.nbytes_free = nbytes_free
         self.nfree = nfree
+        self.nbyte_name = nbytes_name
         self.units = units
         self.compress = compress
         self.seek_info = seek_info
@@ -251,6 +243,8 @@ class LLIO(Structure):
         self.streamer_record = streamer_record
         self.free_segments_record = free_segments_record
 
+def recurse(llio, d):
+    pass
 
 if __name__ == "__main__":
     context = """
@@ -285,7 +279,7 @@ if __name__ == "__main__":
     testing File Header class
     """
     print context 
-    header = FileHeader(1, 100, 2000, 1980, 10, 1, 4, 1, 1990, 10)
+    header = FileHeader(1, 100, 2000, 1980, 10, 1, 100, 4, 1, 1990, 10)
     print header
 
     context = """
@@ -378,8 +372,11 @@ if __name__ == "__main__":
     lib = ctypes.CDLL("../librootiobootstrap.dylib")
     print 1
     open_to_read = wrap_cfunc(lib, "open_to_read", LLIO, ctypes.c_char_p)
-    print open_to_read
+    close_from_read = wrap_cfunc(lib, "close_from_read", ctypes.POINTER(LLIO))
     print 2
     path = "/Users/vk/software/rootiobootstrap/empty_file_from_xxxx.root"
-    obj = open_to_read(ctypes.c_char_p(path))
+    obj = open_to_read(path)
     print obj
+    close_from_read(ctypes.pointer(obj))
+
+

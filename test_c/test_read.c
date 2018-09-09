@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
     printf("filename = %s\n", filename);
 
     struct llio_t llio = open_to_read(filename);
+    print_file_header(&llio.header);
 
     /*
     read_file_header(&llio);
