@@ -116,7 +116,8 @@ extern {
 fn main() {
     println!("hello world!");
 
-    let mut obj = object_t {1, 1, 1}
+    // create an object_tobject_t and print
+    let mut obj = object_t {version: 1, id: 1, bits: 1};
 
 /*
     unsafe {
