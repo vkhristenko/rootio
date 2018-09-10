@@ -28,17 +28,26 @@ if __name__ == "__main__":
         DirectoryRecord, ctypes.POINTER(LLIO),
         ctypes.POINTER(Key))
     read_generic_record_by_location = wrap_cfunc(lib, "read_generic_record_by_location",
-        GenericRecord, ctypes.c_uint64)
+        GenericRecord, ctypes.POINTER(LLIO), ctypes.c_uint64)
+    print read_generic_record_by_location.argtypes
 
-    location = llio.header.begin
+    def print_key_info(key):
+        s = "At:{:>10} N:{:>10} CX={:2.2f}".format(key.seek_key,
+            key.total_bytes, key.obj_bytes / (key.total_bytes - key.key_bytes))
+        print s
+
+    location = long(llio.header.begin)
     irec = 0
+    print ("location = {}".format(location))
+    print ("end = {}".format(llio.header.end))
     while location < llio.header.end:
         gen_record = read_generic_record_by_location(ctypes.pointer(llio), 
-            location)
-        blob = gen_record.blob
-        print gen_record.key
+            ctypes.c_uint64(location))
+        print_key_info(gen_record.key)
 
-#        blob -= 
+        #
+        location += gen_record.key.total_bytes
+        irec += 1
 
     # close the file
     close_from_read(ctypes.pointer(llio))
