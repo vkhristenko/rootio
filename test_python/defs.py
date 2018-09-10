@@ -10,13 +10,15 @@ def wrap_cfunc(lib, fname, result, *arg_types):
     return ctypes.CFUNCTYPE(result, *arg_types)((fname, lib))
 
 class Structure(ctypes.Structure):
+    """
     def __init__(self, lib=None, *funcs_info):
-        """ Register all the provided c functions  """
+        #Register all the provided c functions
         self.lib = lib
         if lib is not None:
             for func_info in funcs_info:
                 self.__dict__[func_info.name] = wrap_cfunc(lib, func_info.result_type,
-                    func_info.arg_types)
+                    *func_info.arg_types)
+                    """
 
     def __repr__(self):
         """print the fields"""
@@ -35,3 +37,17 @@ class Structure(ctypes.Structure):
             return cls(obj)
             
         raise TypeError
+
+if __name__ == "__main__":
+    class Test(Structure):
+        _fields_ = [("a", ctypes.c_int), ("b", ctypes.c_int)]
+
+        def __init__(self, a, b, lib=None, *funcs_info):
+            super(Test, self).__init__(lib, *funcs_info)
+            self.a = a
+            self.b = b
+
+    a = 10
+    b = 20
+    test = Test(a,b)
+    print test

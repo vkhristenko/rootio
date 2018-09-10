@@ -13,29 +13,19 @@ class FileContext(Structure):
 class String(Structure):
     _fields_ = [("size", ctypes.c_int), ("str", ctypes.c_char_p)]
 
-    def __init__(self, s, lib=None, *funcs_info):
-        super(String, self).__init__(lib, *funcs_info)
+    def __init__(self, s):
+#        super(String, self).__init__(lib, *funcs_info)
         self.str = s
         self.size = len(s)
-
-    def get_size(self):
-        if self.lib is None:
-            raise TypeError
-        else:
-            self.size_pstring(ctypes.pointer(self))
 
 class Free(Structure):
     _fields_ = [("version", ctypes.c_uint16), ("begin", ctypes.c_uint64),
                 ("end", ctypes.c_uint64)]
 
-    def __init__(self, version, begin, end, lib=None):
+    def __init__(self, version, begin, end):
         self.version = version
         self.begin = begin
         self.end = end
-        self.lib = lib
-
-        if self.lib is not None:
-            self.size_
 
 class Object(Structure):
     _fields_ = [("version", ctypes.c_uint16),

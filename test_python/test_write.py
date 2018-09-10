@@ -26,14 +26,21 @@ if __name__ == "__main__":
     write_keys_list_record_for_dir = wrap_cfunc(lib, "write_keys_list_record_for_dir",
         None, ctypes.POINTER(LLIO), ctypes.POINTER(KeysListRecord),
         ctypes.POINTER(Directory))
+    simulate_streamer_record = wrap_cfunc(lib, "simulate_streamer_record",
+        None, ctypes.POINTER(LLIO))
+    simulate_free_segments_record = wrap_cfunc(lib, "simulate_free_segments_record",
+        None, ctypes.POINTER(LLIO))
+    size_object = wrap_cfunc(lib, "size_object", 
+        ctypes.c_uint32, ctypes.POINTER(Object))
+    size_in_bytes_string = wrap_cfunc(lib, "size_in_bytes_string",
+        ctypes.c_uint32, ctypes.POINTER(String))
 
-    def simulate_streamer_record(llio):
-        n_sinfo = 0
-        version_sinfo = 5
-        obj = Object(2, 0x1111, 0x1111)
-        str_sinfo = String("")
-        byte_count = 0
-        nbytes_sinfo = 0
+    class Test(object):
+        def __init__(self, a, b, c):
+            self.a = a
+            self.b = b
+            self.c = c
+
 
     # write all the needed records
     close_from_write(ctypes.pointer(llio))
