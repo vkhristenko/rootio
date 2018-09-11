@@ -98,8 +98,10 @@ class Key(Structure):
         ("obj_title", String)
     ]
 
-    def __init__(self, total_bytes, version, obj_bytes, date_time, key_bytes,
-                 cycle, seek_key, seek_pdir, class_name, obj_name, obj_title):
+    def __init__(self, total_bytes=None, version=None, 
+                 obj_bytes=None, date_time=None, key_bytes=None,
+                 cycle=None, seek_key=None, seek_pdir=None, 
+                 class_name=None, obj_name=None, obj_title=None):
         self.total_bytes = total_bytes
         self.version = version
         self.obj_bytes = obj_bytes
