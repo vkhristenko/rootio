@@ -42,7 +42,8 @@ struct generic_record_t simulate_test_record(struct llio_t *llio, struct rdirect
     test.z = 3;
     char b[12]; char *buffer = b;
     serialize_test(&buffer, &test);
-    record.blob = b;
+    record.blob = malloc(12);
+    memcpy(record.blob, buffer, 12);
 
     // generate the key
     struct rstring_t class_name, obj_name, obj_title;

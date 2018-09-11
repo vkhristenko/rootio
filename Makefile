@@ -20,7 +20,7 @@ export topdir
 export includedirs
 export libs
 
-.PHONY: test_c clean
+.PHONY: test_c clean test_cpp
 
 all: $(lib) test_c test_cpp
 
