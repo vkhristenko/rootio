@@ -9,7 +9,7 @@ testlibs = -l$(libname) $(libs)
 all: $(objects)
 
 .c:
-	$(cc) $(flags) $(includedirs) -o $@ $@.c -L$(topdir) $(testlibs)
+	$(cc) $(cflags) $(includedirs) -o $@ $@.c -L$(topdir) $(testlibs)
 
 clean:
 	rm $(objects)

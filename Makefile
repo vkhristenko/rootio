@@ -22,17 +22,21 @@ export libs
 
 .PHONY: test_c clean
 
-all: $(lib) test_c
+all: $(lib) test_c test_cpp
 
 $(lib): $(objects)
 	$(cc) $(ldflags) -o $@ $^ $(libs)
 
-$.o: %.c
+%.o: %.c
 	$(cc) $(cflags) -c -o $@ $^
 
 test_c: $(lib)
 	cd test_c && $(MAKE)
 
+test_cpp: $(lib)
+	cd test_cpp && $(MAKE)
+
 clean:
 	rm $(objects) $(lib)
 	cd test_c && $(MAKE) clean
+	cd test_cpp && $(CMAKE) clean
