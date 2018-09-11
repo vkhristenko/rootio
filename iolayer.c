@@ -154,6 +154,7 @@ struct llio_t open_to_read(char *filename) {
 
 struct llio_t open_to_write(char *filename) {
     struct llio_t llio;
+    printf("open to write filename = %s\n", filename);
     llio.fctx = open_context(filename, "wb");
 
     // write the "root" header

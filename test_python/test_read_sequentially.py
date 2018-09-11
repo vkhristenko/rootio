@@ -32,8 +32,10 @@ if __name__ == "__main__":
     print read_generic_record_by_location.argtypes
 
     def print_key_info(key):
-        s = "At:{:>10} N:{:>10} CX={:2.2f}".format(key.seek_key,
-            key.total_bytes, key.obj_bytes / (key.total_bytes - key.key_bytes))
+        s = "At:{:>10} N:{:>10} {:>15} CX={:2.2f}".format(key.seek_key,
+                key.total_bytes, 
+                "" if key.class_name.size==0 else key.class_name.str[:key.class_name.size], 
+                key.obj_bytes / (key.total_bytes - key.key_bytes))
         print s
 
     location = long(llio.header.begin)

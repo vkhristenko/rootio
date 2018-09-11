@@ -69,14 +69,6 @@ struct keys_list_record_t simulate_keys_list_record_for_dir(struct llio_t *llio,
     record.length = 1;
     record.pkeys = &rec->key;
 
-    // generate key
-    /*
-    struct PString class_name;
-    ctor_withnames_key(&record.key, 
-                       &llio->top_dir_rec.key.class_name, 
-                       &llio->top_dir_rec.named.name, 
-                       &llio->top_dir_rec.named.title);
-                       */
     ctor_key(&record.key);
     record.key.seek_pdir = dir->seek_dir;
     record.key.key_bytes = size_key(&record.key);
@@ -132,33 +124,6 @@ int main(int argc, char** argv) {
            llio.location, 100 + llio.top_dir_rec.key.total_bytes + 
            keys_list_record.key.total_bytes + test_record.key.total_bytes);
     
-    /**
-     * this is left for testing purposes
-     *
-    // sequence of actions to do upon closing the file
-    write_streamer_record(&llio);
-    printf("location to write = %lu and should be %d\n",
-           llio.location, 100 + llio.top_dir_rec.key.total_bytes +
-           keys_list_record.key.total_bytes +
-           llio.streamer_record.key.total_bytes);
-
-    write_free_segments_record(&llio);
-    printf("location to write = %lu and should be %d\n",
-           llio.location, 100 + llio.top_dir_rec.key.total_bytes + 
-           keys_list_record.key.total_bytes +
-           llio.streamer_record.key.total_bytes + 
-           llio.free_segments_record.key.total_bytes);
-
-    write_end_byte(&llio);
-    printf("location to write = %lu and should be %d\n",
-           llio.location, 100 + llio.top_dir_rec.key.total_bytes +
-           keys_list_record.key.total_bytes +
-           llio.streamer_record.key.total_bytes + 
-           llio.free_segments_record.key.total_bytes + 1);
-
-    write_top_dir_record(&llio);
-    write_file_header(&llio);
-    */
     close_from_write(&llio);
     
     print_key(&keys_list_record.key);
