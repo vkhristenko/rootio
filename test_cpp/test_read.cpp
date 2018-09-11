@@ -4,11 +4,6 @@ extern "C" {
 #include "iolayer.h"
 }
 
-void recurse(llio_t const& llio, rdirectory_t const& dir) 
-{
-
-}
-
 int main(int argc, char **argv) 
 {
     std::cout << "hello world\n";
@@ -19,6 +14,6 @@ int main(int argc, char **argv)
 
     std::string filename {argv[1]};
     llio_t llio = open_to_read(filename.c_str());
-    print_file_header(&llio.header);
+
     close_from_read(&llio);
 }

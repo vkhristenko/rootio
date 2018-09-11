@@ -4,24 +4,24 @@
 #include "bootstrap.h"
 
 struct top_dir_record_t {
-    struct key_t key;
-    struct named_t named;
-    struct directory_t dir;
+    struct rkey_t key;
+    struct rnamed_t named;
+    struct rdirectory_t dir;
 };
 
 struct directory_record_t {
-    struct key_t key;
-    struct directory_t dir;
+    struct rkey_t key;
+    struct rdirectory_t dir;
 };
 
 struct keys_list_record_t {
-    struct key_t key;
+    struct rkey_t key;
     int length;
-    struct key_t *pkeys;
+    struct rkey_t *pkeys;
 };
 
 struct generic_record_t {
-    struct key_t key;
+    struct rkey_t key;
     char *blob;
 };
 
@@ -30,7 +30,7 @@ struct generic_record_t {
  *   Key + TList of StreamerElements
  */
 struct streamer_record_t {
-    struct key_t key;
+    struct rkey_t key;
     // blob points to the location where TList of Streamers starts
     // to free the acquired space, move blob pointer back by key_bytes: blob -= key.key_bytes and then free
     char *blob;
@@ -42,18 +42,18 @@ struct streamer_record_t {
  *   to modify the objects on disk -> for instance root allows to delete a record from disk
  */
 struct free_segments_record_t {
-    struct key_t key;
+    struct rkey_t key;
     int length;
-    struct free_t *pfree;
+    struct rfree_t *pfree;
 };
 
 struct llio_t {
     // owns
     uint64_t location;
     // owns
-    struct file_context_t fctx;
+    struct rfile_context_t fctx;
     // owns
-    struct file_header_t header;
+    struct rfile_header_t header;
     // owns
     struct top_dir_record_t top_dir_rec;
     // when reading -> read a blob and provide to the higher layer
@@ -65,8 +65,8 @@ struct llio_t {
 //
 // api: open/close
 //
-struct llio_t open_to_read(char *filename);
-struct llio_t open_to_write(char *filename);
+struct llio_t open_to_read(char const*filename);
+struct llio_t open_to_write(char const*filename);
 void close_from_read(struct llio_t*);
 void close_from_write(struct llio_t*);
 
@@ -79,13 +79,13 @@ void read_free_segments_record(struct llio_t*);
 void read_top_dir_record(struct llio_t*);
 
 //
-struct directory_record_t read_dir_record_by_key(struct llio_t *, struct key_t*);
+struct directory_record_t read_dir_record_by_key(struct llio_t *, struct rkey_t*);
 struct generic_record_t read_generic_record_by_location(struct llio_t*, uint64_t);
 
 /**
  * 
  */
-struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t*, struct directory_t*);
+struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t*, struct rdirectory_t*);
 
 /**
  * Writing logic step by step:
@@ -131,7 +131,7 @@ void write_top_dir_record(struct llio_t*);
  *   - directory is updated to reflect the location where keys list is written
  *   - key of the keys list record is updated to reflect where it is written to
  */
-void write_keys_list_record_for_dir(struct llio_t*, struct keys_list_record_t*, struct directory_t*);
+void write_keys_list_record_for_dir(struct llio_t*, struct keys_list_record_t*, struct rdirectory_t*);
 
 // do increment the location counter
 void write_streamer_record(struct llio_t*);

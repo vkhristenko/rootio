@@ -1,7 +1,7 @@
 sources = $(wildcard *.cpp)
 objects = $(sources:.cpp=)
 cxx = clang++
-cxxflags = -fPIC -Wall -Wextra -O2 -g --std=c++17
+cxxflags = -fPIC -Wall -Wextra -O2 --std=c++17
 testlibs = -l$(libname) $(libs)
 
 .PHONY: clean

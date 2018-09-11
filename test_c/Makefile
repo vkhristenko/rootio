@@ -1,7 +1,7 @@
 sources = $(wildcard *.c)
 objects = $(sources:.c=)
 cc = clang
-cflags = -fPIC -Wall -Wextra -O2 -g
+cflags = -fPIC -Wall -Wextra -O2
 testlibs = -l$(libname) $(libs)
 
 .PHONY: clean

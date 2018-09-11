@@ -7,7 +7,7 @@
 #include "aux.h"
 #include "debug.h"
 
-void test_streamerinfo(struct file_context_t ctx, struct TopDirectory const* root) {
+void test_streamerinfo(struct rfile_context_t ctx, struct TopDirectory const* root) {
     fseek(ctx.pfile, root->header.seek_info, SEEK_SET);
 
     char *buffer = malloc(root->header.nbytes_info);
@@ -15,7 +15,7 @@ void test_streamerinfo(struct file_context_t ctx, struct TopDirectory const* roo
 
     dump_raw(buffer, nbytes, 25);
 
-    struct key_t key_info;
+    struct rkey_t key_info;
     from_buf_key(&buffer, &key_info);
     print_key(&key_info);
 
@@ -39,7 +39,7 @@ void test_streamerinfo(struct file_context_t ctx, struct TopDirectory const* roo
     printf("value = %u\n", get_u32(&buffer_to_use)); 
     printf("value = %u\n", get_u32(&buffer_to_use));
 
-    struct string_t str;
+    struct rstring_t str;
     from_buf_pstring(&buffer_to_use, &str);
     print_pstring(&str);
 
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     char *filename = argv[1];
     printf("filename =%s\n", filename);
 
-    struct file_context_t ctx = open_context(filename, "rb");
+    struct rfile_context_t ctx = open_context(filename, "rb");
     struct TopDirectory root = read_top_dir(ctx);
     print_file_header(&root.header);
 

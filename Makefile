@@ -39,4 +39,4 @@ test_cpp: $(lib)
 clean:
 	rm $(objects) $(lib)
 	cd test_c && $(MAKE) clean
-	cd test_cpp && $(CMAKE) clean
+	cd test_cpp && $(MAKE) clean
