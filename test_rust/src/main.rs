@@ -4,7 +4,7 @@ extern crate test_rust;
 use std::ffi::CString;
 use std::os::raw::c_char;
 
-use test_rust::*;
+use test_rust::bootstrap::*;
 
 fn main() {
     println!("hello world!");
@@ -67,4 +67,39 @@ fn main() {
         obj_title: string_t { size: 10, cstr: s.as_ptr()}
     };
     println!("{:?}", key);
+
+    // create a uuid_t and print
+    let uuid = uuid_t {
+        version: 0,
+        time_low: 1,
+        time_mid: 2,
+        time_hi_and_version: 3,
+        clock_seq_hi_and_reserved: 4,
+        clock_seq_low: 5,
+        node: [0,1,2,3,4,5]
+    };
+    println!("{:?}", uuid);
+
+    // crate a directory_t and print
+    let dir = directory_t {
+        object: obj,
+        version: 1,
+        date_time_c: datime_t {object: obj, raw: 1111},
+        date_time_m: datime_t {object: obj, raw: 2222},
+        nbytes_keys: 100,
+        nbytes_name: 200,
+        seek_dir: 300,
+        seek_parent: 400,
+        seek_keys: 500,
+        uuid: uuid
+    };
+    println!("{:?}", dir);
+
+    // create a top dir record and print
+    let top_dir_rec = top_dir_record_t {
+        key: key,
+        named: n,
+        dir: dir
+    };
+    println!("{:?}", top_dir_rec);
 }
