@@ -142,3 +142,13 @@ pub struct directory_t {
     pub seek_keys: u64,
     pub uuid: uuid_t
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_nothing() {
+        assert_eq!("ok", String::from("ok"));
+    }
+}
