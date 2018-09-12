@@ -5,6 +5,7 @@ use std::ffi::CString;
 use std::os::raw::c_char;
 
 use test_rust::bootstrap::*;
+use test_rust::iolayer::{open_to_read, close_from_read};
 
 fn main() {
     println!("hello world!");
@@ -102,4 +103,9 @@ fn main() {
         dir: dir
     };
     println!("{:?}", top_dir_rec);
+
+    // create an llio_t and close
+    let filename = CString::new("/Users/vk/software/rootiobootstrap/test_write_test_struct_from_c.root").unwrap();
+    let mut llio = open_to_read();
+    close_from_read(&mut llio);
 }
