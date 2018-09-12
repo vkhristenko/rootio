@@ -1,5 +1,5 @@
 [package]
-name = "rtest"
+name = "test_rust"
 version = "0.0.0"
 authors = ["vkhristenko vdkhristenko1991@gmail.com"]
 build = "build.rs"
