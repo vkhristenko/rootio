@@ -125,5 +125,9 @@ fn recurse(mut llio: &mut llio_t, mut dir: &mut directory_t) {
 
     for key in keys {
         println!("{:?}", key);
+        let class_name = unsafe {
+            slice::from_raw_parts(key.class_name.cstr, key.class_name.size as usize);
+        };
+        println!("{:?}", class_name);
     }
 }
