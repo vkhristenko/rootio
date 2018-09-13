@@ -3,9 +3,10 @@ extern crate test_rust;
 
 use std::ffi::CString;
 use std::os::raw::c_char;
+use std::slice;
 
 use test_rust::bootstrap::*;
-use test_rust::iolayer::{open_to_read, close_from_read};
+use test_rust::iolayer::*;
 
 fn main() {
     println!("hello world!");
@@ -105,7 +106,24 @@ fn main() {
     println!("{:?}", top_dir_rec);
 
     // create an llio_t and close
-    let filename = CString::new("/Users/vk/software/rootiobootstrap/test_write_test_struct_from_c.root").unwrap();
-    let mut llio = open_to_read();
-    close_from_read(&mut llio);
+    let filename = CString::new("/Users/vk/toors/test_keysdirs.root").unwrap();
+    let mut llio = open_to_read(&filename);
+    println!("{:?}", llio);
+    let mut top_dir = llio.top_dir_rec.dir;
+    recurse(&mut llio, &mut top_dir);
+    close_from_read(llio);
+}
+
+fn recurse(mut llio: &mut llio_t, mut dir: &mut directory_t) {
+    let keys_list_record = read_keys_list_record_for_dir(&mut llio, &mut dir);
+    println!("{:?}", keys_list_record);
+
+    let keys = unsafe {
+        slice::from_raw_parts(keys_list_record.pkeys, 
+                              keys_list_record.length as usize)
+    };
+
+    for key in keys {
+        println!("{:?}", key);
+    }
 }
