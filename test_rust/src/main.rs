@@ -5,12 +5,15 @@ use std::ffi::CString;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 use std::slice;
+use std::env;
 
 use test_rust::bootstrap::*;
 use test_rust::iolayer::*;
 
 fn main() {
     println!("hello world!");
+
+    let args: Vec<String> = env::args().collect();
 
     // create an object_tobject_t and print
     let obj = object_t {version: 1, id: 1, bits: 1};
@@ -107,7 +110,8 @@ fn main() {
     println!("{:?}", top_dir_rec);
 
     // create an llio_t and close
-    let filename = CString::new("/Users/vk/data/toros/test_keysdirs.root").unwrap();
+    let fname = args[1].clone();
+    let filename = CString::new().unwrap();
     let mut llio = open_to_read(&filename);
     println!("{:?}", llio);
     recurse(&llio, &llio.top_dir_rec.dir);
