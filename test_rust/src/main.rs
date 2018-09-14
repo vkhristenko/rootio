@@ -2,6 +2,7 @@ extern crate libc;
 extern crate test_rust;
 
 use std::ffi::CString;
+use std::ffi::CStr;
 use std::os::raw::c_char;
 use std::slice;
 
@@ -118,16 +119,20 @@ fn recurse(mut llio: &mut llio_t, mut dir: &mut directory_t) {
     let keys_list_record = read_keys_list_record_for_dir(&mut llio, &mut dir);
     println!("{:?}", keys_list_record);
 
-    let keys = unsafe {
+    let mut keys = unsafe {
         slice::from_raw_parts(keys_list_record.pkeys, 
                               keys_list_record.length as usize)
     };
 
-    for key in keys {
+    for mut key in keys {
         println!("{:?}", key);
         let class_name = unsafe {
-            slice::from_raw_parts(key.class_name.cstr, key.class_name.size as usize);
+            CStr::from_ptr(key.class_name.cstr)
         };
-        println!("{:?}", class_name);
+        if class_name == CStr::from_bytes_with_nul(b"TDirectory\0").unwrap() {
+            println!("class_name = {:?}", class_name);
+            let dir_record = read_dir_record_by_key(&mut llio, &mut key);
+            println!("{:?}", dir_record);
+        }
     }
 }

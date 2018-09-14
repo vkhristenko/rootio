@@ -149,14 +149,16 @@ int get_string(char **src, char **dest) {
     // if more input is needed
     if (size == minus_one) {
         int size = get_i32(src); 
-        (*dest) = malloc(size);
+        (*dest) = malloc(size+1);
+        (*dest)[size] = '\0';
         memcpy(*dest, *src, size);
         src+=size;
         return size;
     }
 
     // allocate size bytes and perform mem copy
-    (*dest) = malloc(size);
+    (*dest) = malloc(size+1);
+    (*dest)[size] = '\0';
     memcpy(*dest, *src, size);
     *src+=size;
 

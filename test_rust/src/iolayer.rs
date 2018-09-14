@@ -47,3 +47,11 @@ pub fn read_keys_list_record_for_dir(llio: &mut llio_t, dir: &mut directory_t)
         capi::read_keys_list_record_for_dir(llio as *mut llio_t, dir as *mut directory_t)
     }
 }
+
+pub fn read_dir_record_by_key(llio: &mut llio_t, key: &mut key_t) 
+    -> directory_record_t 
+{
+    unsafe {
+        capi::read_dir_record_by_key(llio as *mut llio_t, key as *mut key_t)
+    }
+}
