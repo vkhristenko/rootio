@@ -16,11 +16,11 @@ mod capi {
         pub(super) fn close_from_write(llio: *mut llio_t);
 
         // api: read
-        pub(super) fn read_keys_list_record_for_dir(llio: *mut llio_t, 
-                                                    dir: *mut directory_t) 
+        pub(super) fn read_keys_list_record_for_dir(llio: *const llio_t, 
+                                                    dir: *const directory_t) 
             -> keys_list_record_t;
-        pub(super) fn read_dir_record_by_key(llio: *mut llio_t,
-                                             key: *mut key_t)
+        pub(super) fn read_dir_record_by_key(llio: *const llio_t,
+                                             key: *const key_t)
             -> directory_record_t;
 
         // api: debug
@@ -40,18 +40,18 @@ pub fn close_from_read(mut llio: llio_t) {
     }
 }
 
-pub fn read_keys_list_record_for_dir(llio: &mut llio_t, dir: &mut directory_t) 
+pub fn read_keys_list_record_for_dir(llio: &llio_t, dir: &directory_t) 
     -> keys_list_record_t
 {
     unsafe {
-        capi::read_keys_list_record_for_dir(llio as *mut llio_t, dir as *mut directory_t)
+        capi::read_keys_list_record_for_dir(llio as *const llio_t, dir as *const directory_t)
     }
 }
 
-pub fn read_dir_record_by_key(llio: &mut llio_t, key: &mut key_t) 
+pub fn read_dir_record_by_key(llio: &llio_t, key: &key_t) 
     -> directory_record_t 
 {
     unsafe {
-        capi::read_dir_record_by_key(llio as *mut llio_t, key as *mut key_t)
+        capi::read_dir_record_by_key(llio as *const llio_t, key as *const key_t)
     }
 }
