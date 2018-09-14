@@ -85,7 +85,7 @@ struct rdatime_t {
     uint32_t raw;
 };
 
-void print_datime(struct rdatime_t * constpdatime);
+void print_datime(struct rdatime_t  const*);
 void from_buf_datime(char **buffer, struct rdatime_t *pdatime);
 void to_buf_datime(char **buffer, struct rdatime_t const* pdatime);
 void ctor_datime(struct rdatime_t *pdatime);
@@ -223,10 +223,10 @@ struct TopDirectory {
     struct rdirectory_t dir;
 };
 
-struct rfile_context_t open_context(char*, char*);
+struct rfile_context_t open_context(char const*, char const*);
 void close_context(struct rfile_context_t);
-void root_write(struct rfile_context_t, char*, int);
-void root_write_at_location(struct rfile_context_t, long, char*, int);
+void root_write(struct rfile_context_t, char const*, int);
+void root_write_at_location(struct rfile_context_t, long, char const*, int);
 
 /**
  * TODO: remove what is not used

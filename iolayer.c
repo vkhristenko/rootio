@@ -67,7 +67,7 @@ void read_top_dir_record(struct llio_t *llio) {
     free(tmp_dir);
 }
 
-struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t *llio, struct rdirectory_t *dir) {
+struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t const*llio, struct rdirectory_t const*dir) {
     struct keys_list_record_t record;
 
     fseek(llio->fctx.pfile, dir->seek_keys, SEEK_SET);
@@ -94,7 +94,7 @@ struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t *llio, str
     return record;
 }
 
-struct directory_record_t read_dir_record_by_key(struct llio_t *llio, struct rkey_t *key) {
+struct directory_record_t read_dir_record_by_key(struct llio_t const*llio, struct rkey_t const* key) {
     struct directory_record_t record;
 
     fseek(llio->fctx.pfile, key->seek_key, SEEK_SET);
@@ -114,7 +114,7 @@ struct directory_record_t read_dir_record_by_key(struct llio_t *llio, struct rke
     return record;
 }
 
-struct generic_record_t read_generic_record_by_location(struct llio_t *llio, uint64_t location) {
+struct generic_record_t read_generic_record_by_location(struct llio_t const*llio, uint64_t location) {
     struct generic_record_t record;
 
     // read into mem

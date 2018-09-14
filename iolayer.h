@@ -71,7 +71,7 @@ void close_from_read(struct llio_t*);
 void close_from_write(struct llio_t*);
 
 //
-// api: read/write records
+// private functions, modify the state
 //
 void read_file_header(struct llio_t*);
 void read_streamer_record(struct llio_t*);
@@ -79,13 +79,11 @@ void read_free_segments_record(struct llio_t*);
 void read_top_dir_record(struct llio_t*);
 
 //
-struct directory_record_t read_dir_record_by_key(struct llio_t *, struct rkey_t*);
-struct generic_record_t read_generic_record_by_location(struct llio_t*, uint64_t);
-
-/**
- * 
- */
-struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t*, struct rdirectory_t*);
+// public functions, no state modifications
+//
+struct directory_record_t read_dir_record_by_key(struct llio_t const*, struct rkey_t const*);
+struct generic_record_t read_generic_record_by_location(struct llio_t const*, uint64_t);
+struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t const*, struct rdirectory_t const*);
 
 /**
  * Writing logic step by step:
