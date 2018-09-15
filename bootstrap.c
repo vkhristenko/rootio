@@ -5,61 +5,61 @@
 //
 // POJect Product
 //
-void from_buf_object(char ** buffer, struct robject_t *obj) {
+void from_buf_object(char ** buffer, struct object_t *obj) {
     obj->version = get_version(buffer);
     obj->id = get_u32(buffer);
     obj->bits = get_u32(buffer);
 }
 
-void to_buf_object(char ** buffer, struct robject_t const* obj) {
+void to_buf_object(char ** buffer, struct object_t const* obj) {
     put_version(buffer, obj->version);
     put_u32(buffer, obj->id);
     put_u32(buffer, obj->bits);
 }
 
-uint32_t size_object(struct robject_t const* obj) {
+uint32_t size_object(struct object_t const* obj) {
     return 10;
 }
 
 //
 // pstring
 //
-void print_pstring(struct rstring_t const* ppstr) {
-    printf("Product <rstring_t:>\n");
+void print_pstring(struct string_t const* ppstr) {
+    printf("Product <string_t:>\n");
     printf("--------------------\n");
     printf("size = %d\n", ppstr->size);
     print_string(ppstr->str);
 }
 
-void from_buf_pstring(char **buffer, struct rstring_t *ppstr) {
+void from_buf_pstring(char **buffer, struct string_t *ppstr) {
     ppstr->size = get_string(buffer, &ppstr->str);
 }
 
-void to_buf_pstring(char **buffer, struct rstring_t const* ppstr) {
+void to_buf_pstring(char **buffer, struct string_t const* ppstr) {
     put_string(buffer, ppstr->str, ppstr->size);
 }
 
-void ctor_pstring(struct rstring_t *ppstr) {
+void ctor_pstring(struct string_t *ppstr) {
     ppstr->str = "";
     ppstr->size = 0;
 }
 
-void ctor_nomemcopy_pstring(struct rstring_t *ppstr, char *pstr, int size) {
+void ctor_nomemcopy_pstring(struct string_t *ppstr, char *pstr, int size) {
     ppstr->size = size;
     ppstr->str = pstr;
 }
 
-void ctor_memcopy_pstring(struct rstring_t *ppstr, char *pstr, int size) {
+void ctor_memcopy_pstring(struct string_t *ppstr, char *pstr, int size) {
     ppstr->size = size;
     ppstr->str = malloc(ppstr->size);
     memcpy(ppstr->str, pstr, ppstr->size);
 }
 
-void dtor_pstring(struct rstring_t *ppstr) {
+void dtor_pstring(struct string_t *ppstr) {
     free(ppstr->str);
 }
 
-uint32_t size_in_bytes_string(struct rstring_t const* pstr) {
+uint32_t size_in_bytes_string(struct string_t const* pstr) {
     uint32_t nbytes = 1;
     if (pstr->size > 0 && pstr->size < 255)
         nbytes += pstr->size;
@@ -69,17 +69,17 @@ uint32_t size_in_bytes_string(struct rstring_t const* pstr) {
     return nbytes;
 }
 
-uint32_t size_pstring(struct rstring_t const* pstr) {
+uint32_t size_pstring(struct string_t const* pstr) {
     return (uint32_t)(pstr->size);
 }
 
-void print_pfree(struct rfree_t const* pfree) {
+void print_pfree(struct free_t const* pfree) {
     print_u16(pfree->version);
     print_u64(pfree->begin);
     print_u64(pfree->end);
 }
 
-void from_buf_pfree(char **buffer, struct rfree_t *pfree) {
+void from_buf_pfree(char **buffer, struct free_t *pfree) {
     pfree->version = get_version(buffer);
     if (pfree->version > 1000) {
         pfree->begin = get_u64(buffer);
@@ -90,7 +90,7 @@ void from_buf_pfree(char **buffer, struct rfree_t *pfree) {
     }
 }
 
-void to_buf_pfree(char **buffer, struct rfree_t const* pfree) {
+void to_buf_pfree(char **buffer, struct free_t const* pfree) {
     put_version(buffer, pfree->version);
     if (pfree->version > 1000) {
         put_u64(buffer, pfree->begin);
@@ -101,14 +101,14 @@ void to_buf_pfree(char **buffer, struct rfree_t const* pfree) {
     }
 }
 
-uint32_t size_pfree(struct rfree_t const* pfree) {
+uint32_t size_pfree(struct free_t const* pfree) {
     int nbytes = 10;
     if (pfree->version > 1000)
         nbytes += 8;
     return nbytes;
 }
 
-void ctor_pfree(struct rfree_t *pfree, uint64_t begin, uint64_t end) {
+void ctor_pfree(struct free_t *pfree, uint64_t begin, uint64_t end) {
     pfree->version = 1;
     pfree->begin = begin;
     pfree->end = end;
@@ -119,80 +119,80 @@ void ctor_pfreenode(struct free_node_t *node) {
 }
 
 //
-// rdatime_t
+// datime_t
 //
-void from_buf_datime(char **buffer, struct rdatime_t *pdatime) {
+void from_buf_datime(char **buffer, struct datime_t *pdatime) {
     pdatime->raw = get_u32(buffer);
 }
 
-void to_buf_datime(char **buffer, struct rdatime_t const* pdatime) {
+void to_buf_datime(char **buffer, struct datime_t const* pdatime) {
     put_u32(buffer, pdatime->raw);
 }
 
-void ctor_datime(struct rdatime_t *pdatime) {
+void ctor_datime(struct datime_t *pdatime) {
     pdatime->raw = 12345;
 }
 
-void dtor_datime(struct rdatime_t *pdatime) {}
+void dtor_datime(struct datime_t *pdatime) {}
 
-void print_datime(struct rdatime_t const* pdatime) {
-    printf("Product <rdatime_t>:\n");
+void print_datime(struct datime_t const* pdatime) {
+    printf("Product <datime_t>:\n");
     printf("-------------------\n");
     print_u32(pdatime->raw);
 }
 
-uint32_t size_datime(struct rdatime_t const* pdatime) {
+uint32_t size_datime(struct datime_t const* pdatime) {
     return 4;
 }
 
-void ctor_fromval_datime(struct rdatime_t* pdatime, int32_t value) {
+void ctor_fromval_datime(struct datime_t* pdatime, int32_t value) {
     pdatime->raw = value;
 }
 
 //
-// rnamed_t
+// named_t
 //
-void print_named(struct rnamed_t const* pnamed) {
-    printf("Product <rnamed_t>:\n");
+void print_named(struct named_t const* pnamed) {
+    printf("Product <named_t>:\n");
     printf("-------------------\n");
     print_pstring(&pnamed->name);
     print_pstring(&pnamed->title);
 }
 
-void from_buf_named(char **buffer, struct rnamed_t *pnamed) {
+void from_buf_named(char **buffer, struct named_t *pnamed) {
     from_buf_pstring(buffer, &pnamed->name);
     from_buf_pstring(buffer, &pnamed->title);
 }
 
-void to_buf_named(char **buffer, struct rnamed_t const* pnamed) {
+void to_buf_named(char **buffer, struct named_t const* pnamed) {
     to_buf_pstring(buffer, &pnamed->name);
     to_buf_pstring(buffer, &pnamed->title);
 }
 
-void ctor_named(struct rnamed_t *pnamed) {
+void ctor_named(struct named_t *pnamed) {
     ctor_pstring(&pnamed->name);
     ctor_pstring(&pnamed->title);
 }
 
-void ctor_frompstring_named(struct rnamed_t* pnamed, struct rstring_t* pname, struct rstring_t* ptitle) {
+void ctor_frompstring_named(struct named_t* pnamed, struct string_t* pname, struct string_t* ptitle) {
     ctor_nomemcopy_pstring(&pnamed->name, pname->str, pname->size);
     ctor_nomemcopy_pstring(&pnamed->title, ptitle->str, ptitle->size);
 }
 
-void dtor_named(struct rnamed_t *pnamed) {
+void dtor_named(struct named_t *pnamed) {
     dtor_pstring(&pnamed->name);
     dtor_pstring(&pnamed->title);
 }
 
-uint32_t size_named(struct rnamed_t const* pnamed) {
+uint32_t size_named(struct named_t const* pnamed) {
     return size_in_bytes_string(&pnamed->name) + size_in_bytes_string(&pnamed->title);
 }
 
 //
 // file header 
 //
-void print_file_header(struct rfile_header_t const* pheader) {
-    printf("Product <rfile_header_t>:\n");
+void print_file_header(struct file_header_t const* pheader) {
+    printf("Product <file_header_t>:\n");
     printf("-----------------------\n");
     print_u32(pheader->version);
     print_u32(pheader->begin);
@@ -207,16 +207,16 @@ void print_file_header(struct rfile_header_t const* pheader) {
     print_u32(pheader->nbytes_info);
 }
 
-void ctor_file_header(struct rfile_header_t *pheader) {
+void ctor_file_header(struct file_header_t *pheader) {
     pheader->version = 61103;
     pheader->begin = 100;
     pheader->units = 4;
     pheader->compress = 1;
 }
 
-void dtor_file_header(struct rfile_header_t *pheader) {}
+void dtor_file_header(struct file_header_t *pheader) {}
 
-void from_buf_file_header(char **buffer, struct rfile_header_t *pheader) {
+void from_buf_file_header(char **buffer, struct file_header_t *pheader) {
     if (strncmp(*buffer, "root", 4)) {
         printf("not a root file\n");
         assert(0);
@@ -249,7 +249,7 @@ void from_buf_file_header(char **buffer, struct rfile_header_t *pheader) {
     }
 }
 
-void to_buf_file_header(char **buffer, struct rfile_header_t const* pheader) {
+void to_buf_file_header(char **buffer, struct file_header_t const* pheader) {
     put_u32(buffer, pheader->version);
     put_u32(buffer, pheader->begin);
     int is_large_file = pheader->version > 1000000u;
@@ -281,8 +281,8 @@ void to_buf_file_header(char **buffer, struct rfile_header_t const* pheader) {
 //
 // key product
 //
-void print_key(struct rkey_t const* pkey) {
-    printf("Product <rkey_t>:\n");
+void print_key(struct key_t const* pkey) {
+    printf("Product <key_t>:\n");
     printf("----------------\n");
     print_u32(pkey->total_bytes);
     print_u32(pkey->version);
@@ -297,7 +297,7 @@ void print_key(struct rkey_t const* pkey) {
     print_pstring(&pkey->obj_title);
 }
 
-void ctor_key(struct rkey_t *pkey) {
+void ctor_key(struct key_t *pkey) {
     pkey->version = 4;
     ctor_fromval_datime(&pkey->date_time, 1111);
     pkey->cycle = 1;
@@ -309,21 +309,21 @@ void ctor_key(struct rkey_t *pkey) {
     ctor_pstring(&pkey->obj_title);
 }
 
-void ctor_withnames_key(struct rkey_t *pkey, struct rstring_t* pclass_name, struct rstring_t *pobj_name,
-                        struct rstring_t *pobj_title) {
+void ctor_withnames_key(struct key_t *pkey, struct string_t* pclass_name, struct string_t *pobj_name,
+                        struct string_t *pobj_title) {
     ctor_key(pkey);
     ctor_nomemcopy_pstring(&pkey->class_name, pclass_name->str, pclass_name->size);
     ctor_nomemcopy_pstring(&pkey->obj_name, pobj_name->str, pobj_name->size);
     ctor_nomemcopy_pstring(&pkey->obj_title, pobj_title->str, pobj_title->size);
 }
 
-void dtor_key(struct rkey_t *pkey) {
+void dtor_key(struct key_t *pkey) {
     dtor_pstring(&pkey->class_name);
     dtor_pstring(&pkey->obj_name);
     dtor_pstring(&pkey->obj_title);
 }
 
-void from_buf_key(char **buffer, struct rkey_t *pkey) {
+void from_buf_key(char **buffer, struct key_t *pkey) {
     pkey->total_bytes = get_u32(buffer);
     pkey->version = get_version(buffer);
     pkey->obj_bytes = get_u32(buffer);
@@ -342,7 +342,7 @@ void from_buf_key(char **buffer, struct rkey_t *pkey) {
     from_buf_pstring(buffer, &(pkey->obj_title));
 }
 
-void to_buf_key(char **buffer, struct rkey_t const* pkey) {
+void to_buf_key(char **buffer, struct key_t const* pkey) {
     put_u32(buffer, pkey->total_bytes);
     put_version(buffer, pkey->version);
     put_u32(buffer, pkey->obj_bytes);
@@ -362,7 +362,7 @@ void to_buf_key(char **buffer, struct rkey_t const* pkey) {
     to_buf_pstring(buffer, &pkey->obj_title);
 }
 
-uint32_t size_key(struct rkey_t const* pkey) {
+uint32_t size_key(struct key_t const* pkey) {
     uint32_t nbytes = 22;
     if (pkey->version > 1000) nbytes += 8;
     nbytes += size_in_bytes_string(&pkey->class_name) 
@@ -375,7 +375,7 @@ uint32_t size_key(struct rkey_t const* pkey) {
 //
 // uuid
 //
-void print_uuid(struct ruuid_t const* uuid) {
+void print_uuid(struct uuid_t const* uuid) {
     print_u32(uuid->version);
     print_u32(uuid->time_low);
     print_u16(uuid->time_mid);
@@ -386,13 +386,13 @@ void print_uuid(struct ruuid_t const* uuid) {
         print_uchar((uuid->node)[i]);
 }
 
-void ctor_uuid(struct ruuid_t *uuid) {
+void ctor_uuid(struct uuid_t *uuid) {
     uuid->version = 1;
 }
 
-void dtor_uuid(struct ruuid_t *uuid) {}
+void dtor_uuid(struct uuid_t *uuid) {}
 
-void from_buf_uuid(char **buffer, struct ruuid_t * uuid) {
+void from_buf_uuid(char **buffer, struct uuid_t * uuid) {
     uuid->version = get_version(buffer);
     uuid->time_low = get_u32(buffer);
     uuid->time_mid = get_u16(buffer);
@@ -403,7 +403,7 @@ void from_buf_uuid(char **buffer, struct ruuid_t * uuid) {
         (uuid->node)[i] = get_u8(buffer);
 }
 
-void to_buf_uuid(char **buffer, struct ruuid_t const* uuid) {
+void to_buf_uuid(char **buffer, struct uuid_t const* uuid) {
     put_version(buffer, uuid->version);
     put_u32(buffer, uuid->time_low);
     put_u16(buffer, uuid->time_mid);
@@ -414,24 +414,24 @@ void to_buf_uuid(char **buffer, struct ruuid_t const* uuid) {
         put_u8(buffer, (uuid->node)[i]);
 }
 
-uint32_t size_uuid(struct ruuid_t const* ppuid) {
+uint32_t size_uuid(struct uuid_t const* ppuid) {
     return 18;
 }
 
 //
 // directory product
 //
-void ctor_dir(struct rdirectory_t *pdir) {
+void ctor_dir(struct directory_t *pdir) {
     pdir->version = 5;
     ctor_uuid(&pdir->uuid);
     ctor_fromval_datime(&pdir->date_time_c, 1234);
     ctor_fromval_datime(&pdir->date_time_m, 1234);
 }
 
-void dtor_dir(struct rdirectory_t *pdir) {}
+void dtor_dir(struct directory_t *pdir) {}
 
-void print_dir(struct rdirectory_t const* pdir) {
-    printf("Product <rdirectory_t>:\n");
+void print_dir(struct directory_t const* pdir) {
+    printf("Product <directory_t>:\n");
     printf("-----------------------\n");
     print_u32(pdir->version);
     print_datime(&(pdir->date_time_c));
@@ -444,7 +444,7 @@ void print_dir(struct rdirectory_t const* pdir) {
     print_uuid(&(pdir->uuid));
 }
 
-void from_buf_dir(char **buffer, struct rdirectory_t *pdir) {
+void from_buf_dir(char **buffer, struct directory_t *pdir) {
     pdir->version = get_version(buffer);
     from_buf_datime(buffer, &(pdir->date_time_c)); // ptr is taken care of
     from_buf_datime(buffer, &(pdir->date_time_m)); // same
@@ -462,7 +462,7 @@ void from_buf_dir(char **buffer, struct rdirectory_t *pdir) {
     from_buf_uuid(buffer, &pdir->uuid);
 }
 
-void to_buf_dir(char **buffer, struct rdirectory_t const* pdir) {
+void to_buf_dir(char **buffer, struct directory_t const* pdir) {
     put_version(buffer, pdir->version);
     to_buf_datime(buffer, &(pdir->date_time_c));
     to_buf_datime(buffer, &(pdir->date_time_m));
@@ -482,7 +482,7 @@ void to_buf_dir(char **buffer, struct rdirectory_t const* pdir) {
         for (int i=0; i<3; i++) put_u32(buffer, 0);
 }
 
-uint32_t size_dir(struct rdirectory_t const* pdir) {
+uint32_t size_dir(struct directory_t const* pdir) {
     // version (just short) + nbytes_keys + nbytes_name + seek_dir + seek_parent + seek_keys (as int)
     int nbytes = 22; 
     if (pdir->version <= 1000)
@@ -498,38 +498,38 @@ uint32_t size_keylist(struct key_list_t const* pkeylist) {
     return nbytes;
 }
 
-void root_write(struct rfile_context_t ctx, char const* buf, int size) { 
+void root_write(struct file_context_t ctx, char const* buf, int size) { 
     fwrite((void*)buf, 1, size, ctx.pfile);
 }
 
-void root_write_at_location(struct rfile_context_t ctx, long location, char const*buf,
+void root_write_at_location(struct file_context_t ctx, long location, char const*buf,
                             int size) 
 {
     fseek(ctx.pfile, location, SEEK_SET);
     fwrite((void*)buf, 1, size, ctx.pfile);
 }
 
-struct rfile_context_t open_context(char const*filename, char const* opts) {
-    struct rfile_context_t ctx;
+struct file_context_t open_context(char const*filename, char const* opts) {
+    struct file_context_t ctx;
     ctx.pfile = fopen(filename, opts);
     return ctx;
 }  
 
-void close_context(struct rfile_context_t ctx) {
+void close_context(struct file_context_t ctx) {
     fclose(ctx.pfile);
 }
 
 
 /*
-void list_keys(struct rfile_context_t ctx, struct rdirectory_t *pdir, 
-               struct rkey_t ** pkeys, int *pnkeys) {
+void list_keys(struct file_context_t ctx, struct directory_t *pdir, 
+               struct key_t ** pkeys, int *pnkeys) {
     // read into the buffer
     char *buffer = malloc(pdir->nbytes_keys);
     fseek(ctx.pfile, pdir->seek_keys, SEEK_SET);
     size_t nbytes = fread((void*)buffer, 1, pdir->nbytes_keys, ctx.pfile);
 
     // tlist key
-    struct rkey_t key;
+    struct key_t key;
     ctor_key(&key);
     from_buf_key(&buffer, &key);
     printf("\n\nprint keys list\n\n");
@@ -539,7 +539,7 @@ void list_keys(struct rfile_context_t ctx, struct rdirectory_t *pdir,
     
     // get how many keys we have and allocate enough space on heap
     *pnkeys = get_u32(&buffer);
-    *pkeys = malloc(sizeof(struct rkey_t)*(*pnkeys));
+    *pkeys = malloc(sizeof(struct key_t)*(*pnkeys));
 
     // iterate, construct, cast from from the in-memory buffer
     for (int i=0; i<(*pnkeys); i++) {
@@ -553,7 +553,7 @@ void list_keys(struct rfile_context_t ctx, struct rdirectory_t *pdir,
 //
 // some logic
 //
-void get_top_dir(struct rfile_context_t ctx, struct rdirectory_t *pdir) {
+void get_top_dir(struct file_context_t ctx, struct directory_t *pdir) {
     char *buffer = malloc(300);
     size_t nbytes = fread((void*)buffer, 1, 300, ctx.pfile);
     char *start = buffer;
@@ -564,7 +564,7 @@ void get_top_dir(struct rfile_context_t ctx, struct rdirectory_t *pdir) {
     dump_raw(buffer, nbytes, 20);
 
     // get the file header
-    struct rfile_header_t header;
+    struct file_header_t header;
     ctor_file_header(&header);
     from_buf_file_header(&buffer, &header);
     print_file_header(&header);
@@ -573,14 +573,14 @@ void get_top_dir(struct rfile_context_t ctx, struct rdirectory_t *pdir) {
 
     // top dir key
     start+=100;
-    struct rkey_t key;
+    struct key_t key;
     ctor_key(&key);
     from_buf_key(&start, &key);
     print_key(&key);
     printf("\n");
 
     // get named stuff
-    struct rnamed_t named;
+    struct named_t named;
     ctor_named(&named);
     from_buf_named(&start, &named);
     print_named(&named);
@@ -592,24 +592,24 @@ void get_top_dir(struct rfile_context_t ctx, struct rdirectory_t *pdir) {
     printf("\n");
 }
 
-void get_blob(struct rfile_context_t ctx, struct rkey_t *pkey, char **blob) {
+void get_blob(struct file_context_t ctx, struct key_t *pkey, char **blob) {
     // read in the pre-allocated blob
     fseek(ctx.pfile, pkey->seek_key, SEEK_SET);
     size_t nbytes = fread((void*)*blob, 1, pkey->total_bytes, ctx.pfile);
 
-    struct rkey_t key;
+    struct key_t key;
     ctor_key(&key);
     from_buf_key(blob, &key);
 }
 
-void dump_contents(struct rfile_context_t ctx) {
+void dump_contents(struct file_context_t ctx) {
     // get top dir
-    struct rdirectory_t dir;
+    struct directory_t dir;
     ctor_dir(&dir);
     get_top_dir(ctx, &dir);
 
     // list keys in this dir
-    struct rkey_t *pkeys; 
+    struct key_t *pkeys; 
     int nkeys;
     list_keys(ctx, &dir, &pkeys, &nkeys);
     for (int i=0; i<nkeys; i++) {
@@ -618,17 +618,17 @@ void dump_contents(struct rfile_context_t ctx) {
     }
 }
 
-struct rfile_context_t open_context(char* filename, char *opts) {
-    struct rfile_context_t ctx;
+struct file_context_t open_context(char* filename, char *opts) {
+    struct file_context_t ctx;
     ctx.pfile = fopen(filename, opts);
     return ctx;
 }  
 
-void close_context(struct rfile_context_t ctx) {
+void close_context(struct file_context_t ctx) {
     fclose(ctx.pfile);
 }
 
-struct TopDirectory_v2 read_top_dir_v2(struct rfile_context_t ctx) {
+struct TopDirectory_v2 read_top_dir_v2(struct file_context_t ctx) {
     struct TopDirectory_v2 root;
 
     // initial buffer of 300bytes is a safe assumption
@@ -655,7 +655,7 @@ struct TopDirectory_v2 read_top_dir_v2(struct rfile_context_t ctx) {
     return root;
 }
 
-struct TopDirectory read_top_dir(struct rfile_context_t ctx) {
+struct TopDirectory read_top_dir(struct file_context_t ctx) {
     struct TopDirectory root;
 
     // initial buffer of 300bytes is a safe assumption
@@ -669,12 +669,12 @@ struct TopDirectory read_top_dir(struct rfile_context_t ctx) {
 
     // top dir key
     start+=100;
-    struct rkey_t key;
+    struct key_t key;
     ctor_key(&key);
     from_buf_key(&start, &key);
 
     // get named stuff
-    struct rnamed_t named;
+    struct named_t named;
     ctor_named(&named);
     from_buf_named(&start, &named);
 
@@ -684,7 +684,7 @@ struct TopDirectory read_top_dir(struct rfile_context_t ctx) {
     return root;
 }
 
-char* read_blob(struct rfile_context_t ctx, struct rkey_t const *pkey) {
+char* read_blob(struct file_context_t ctx, struct key_t const *pkey) {
     char *blob = malloc(pkey->total_bytes);
 
     // read in the allocated blob
@@ -694,7 +694,7 @@ char* read_blob(struct rfile_context_t ctx, struct rkey_t const *pkey) {
     return blob;
 }
 
-struct key_list_t read_keys(struct rfile_context_t ctx, struct rdirectory_t const* pdir) {
+struct key_list_t read_keys(struct file_context_t ctx, struct directory_t const* pdir) {
     struct key_list_t klist;
 
     // read into the buffer
@@ -703,13 +703,13 @@ struct key_list_t read_keys(struct rfile_context_t ctx, struct rdirectory_t cons
     size_t nbytes = fread((void*)buffer, 1, pdir->nbytes_keys, ctx.pfile);
 
     // tlist key
-    struct rkey_t key;
+    struct key_t key;
     ctor_key(&key);
     from_buf_key(&buffer, &key);
     
     // get how many keys we have and allocate enough space on heap
     klist.size = get_u32(&buffer);
-    klist.pkeys = malloc(sizeof(struct rkey_t)*(klist.size));
+    klist.pkeys = malloc(sizeof(struct key_t)*(klist.size));
 
     // iterate, construct, cast from from the in-memory buffer
     for (int i=0; i<(klist.size); i++) {
@@ -722,12 +722,12 @@ struct key_list_t read_keys(struct rfile_context_t ctx, struct rdirectory_t cons
     return klist;
 }
 
-void root_reserve(struct rfile_context_t ctx, int size) {
+void root_reserve(struct file_context_t ctx, int size) {
     char *buf = malloc(size);
     fwrite((void*)buf, 1, size, ctx.pfile);
 }
 
-void root_reserve_at_location(struct rfile_context_t ctx, long location, int size) {
+void root_reserve_at_location(struct file_context_t ctx, long location, int size) {
     fseek(ctx.pfile, location, SEEK_SET);
 
     char *buf = malloc(size);
