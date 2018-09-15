@@ -1,15 +1,21 @@
 #include <iostream>
 
+namespace root {
+
 extern "C" {
 #include "iolayer.h"
 #include "simulations.h"
 #include "aux.h"
 }
 
+}
+
 #include "TBufferFile.h"
 #include "TH1F.h"
 
-generic_record_t simulate_hist_record(llio_t const& llio, rdirectory_t const& dir) 
+using namespace root;
+
+generic_record_t simulate_hist_record(llio_t const& llio, directory_t const& dir) 
 {
     // create a hist and fill
     TH1F *hist = new TH1F("hist", "hist", 10, 0, 10);
@@ -24,7 +30,7 @@ generic_record_t simulate_hist_record(llio_t const& llio, rdirectory_t const& di
     // create a record (note)
     generic_record_t record;
     record.blob = raw;
-    rstring_t class_name, obj_name, obj_title;
+    string_t class_name, obj_name, obj_title;
     ctor_nomemcopy_pstring(&class_name, "TH1F", 4);
     ctor_nomemcopy_pstring(&obj_name, "hist", 4);
     ctor_nomemcopy_pstring(&obj_title, "hist", 4);
@@ -42,7 +48,7 @@ generic_record_t simulate_hist_record(llio_t const& llio, rdirectory_t const& di
 }
 
 keys_list_record_t simulate_keys_list_record_for_dir(llio_t const& llio,
-    rdirectory_t const& dir, generic_record_t &rec) 
+    directory_t const& dir, generic_record_t &rec) 
 {
     keys_list_record_t record;
     record.length = 1;

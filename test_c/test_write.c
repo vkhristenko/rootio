@@ -19,7 +19,7 @@ struct test_t {
 };
 
 struct test_record_t {
-    struct rkey_t key;
+    struct key_t key;
     struct test_t test;
 };
 
@@ -33,7 +33,7 @@ uint32_t size_test(struct test_t *test) {
     return 12;
 }
 
-struct generic_record_t simulate_test_record(struct llio_t *llio, struct rdirectory_t *dir) {
+struct generic_record_t simulate_test_record(struct llio_t *llio, struct directory_t *dir) {
     // initialize the test object
     struct generic_record_t record;
     struct test_t test;
@@ -46,7 +46,7 @@ struct generic_record_t simulate_test_record(struct llio_t *llio, struct rdirect
     memcpy(record.blob, buffer, 12);
 
     // generate the key
-    struct rstring_t class_name, obj_name, obj_title;
+    struct string_t class_name, obj_name, obj_title;
     ctor_nomemcopy_pstring(&class_name, "test_t", 6);
     ctor_nomemcopy_pstring(&obj_name, "test obj name", 13);
     ctor_nomemcopy_pstring(&obj_title, "test obj title", 14);
@@ -63,7 +63,7 @@ struct generic_record_t simulate_test_record(struct llio_t *llio, struct rdirect
 }
 
 struct keys_list_record_t simulate_keys_list_record_for_dir(struct llio_t *llio, 
-                                                            struct rdirectory_t *dir,
+                                                            struct directory_t *dir,
                                                             struct generic_record_t *rec) {
     // init
     struct keys_list_record_t record; 

@@ -4,7 +4,7 @@
 
 #include "iolayer.h"
 
-void recurse(struct llio_t *llio, struct rdirectory_t* dir) {
+void recurse(struct llio_t *llio, struct directory_t* dir) {
     struct keys_list_record_t keys_list_record = read_keys_list_record_for_dir(llio, dir);
     printf("\n\n--- --- --- ---\n\n");
     printf("*** print a key of the keys list ***\n");
@@ -13,7 +13,7 @@ void recurse(struct llio_t *llio, struct rdirectory_t* dir) {
     printf("\n\n--- --- --- ---\n\n");
     printf("*** print a keys list of size = %d\n", keys_list_record.length);
     for (int i=0; i<keys_list_record.length; i++) {
-        struct rkey_t *key = &(keys_list_record.pkeys[i]);
+        struct key_t *key = &(keys_list_record.pkeys[i]);
         print_key(key);
         if (strcmp(key->class_name.str, "TDirectory") == 0) {
             struct directory_record_t dir_record = 

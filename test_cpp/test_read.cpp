@@ -1,8 +1,14 @@
 #include <iostream>
 
+namespace root {
+
 extern "C" {
 #include "iolayer.h"
 }
+
+}
+
+using namespace root;
 
 int main(int argc, char **argv) 
 {
@@ -13,7 +19,7 @@ int main(int argc, char **argv)
     }
 
     std::string filename {argv[1]};
-    llio_t llio = open_to_read(filename.c_str());
+    llio_t llio = root::open_to_read(filename.c_str());
 
-    close_from_read(&llio);
+    root::close_from_read(&llio);
 }

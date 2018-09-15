@@ -1,10 +1,16 @@
 #include <iostream>
 
+namespace root {
+
 extern "C" {
 #include "iolayer.h"
 }
 
-void recurse(llio_t const& llio, rdirectory_t const& dir) 
+}
+
+using namespace root;
+
+void recurse(llio_t const& llio, directory_t const& dir) 
 {
 
 }
@@ -18,7 +24,7 @@ int main(int argc, char **argv)
     }
 
     std::string filename {argv[1]};
-    llio_t llio = open_to_read(filename.c_str());
-    print_file_header(&llio.header);
-    close_from_read(&llio);
+    llio_t llio = root::open_to_read(filename.c_str());
+    root::print_file_header(&llio.header);
+    root::close_from_read(&llio);
 }
