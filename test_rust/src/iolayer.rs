@@ -22,6 +22,9 @@ mod capi {
         pub(super) fn read_dir_record_by_key(llio: *const llio_t,
                                              key: *const key_t)
             -> directory_record_t;
+        pub(super) fn read_generic_record_by_location(llio: *const llio_t,
+                                                      location: u64)
+            -> generic_record_t;
 
         // api: debug
 
@@ -53,5 +56,13 @@ pub fn read_dir_record_by_key(llio: &llio_t, key: &key_t)
 {
     unsafe {
         capi::read_dir_record_by_key(llio as *const llio_t, key as *const key_t)
+    }
+}
+
+pub fn read_generic_record_by_location(llio: &llio_t, location: u64)
+    -> generic_record_t
+{
+    unsafe {
+        capi::read_generic_record_by_location(llio as *const llio_t, location)
     }
 }
