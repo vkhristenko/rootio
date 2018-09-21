@@ -119,4 +119,3 @@ if __name__ == "__main__":
 
     # write all the needed records
     close_from_write(ctypes.pointer(llio))
-
