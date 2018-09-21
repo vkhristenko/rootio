@@ -111,7 +111,7 @@ fn main() {
 
     // create an llio_t and close
     let fname = args[1].clone();
-    let filename = CString::new().unwrap();
+    let filename = CString::new(fname).unwrap();
     let mut llio = open_to_read(&filename);
     println!("{:?}", llio);
     recurse(&llio, &llio.top_dir_rec.dir);
