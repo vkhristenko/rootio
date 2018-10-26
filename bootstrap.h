@@ -8,7 +8,7 @@
 // file context
 //
 struct file_context_t {
-    FILE *pfile;
+    int fd;
 };
 
 /**
@@ -228,25 +228,4 @@ void close_context(struct file_context_t);
 void root_write(struct file_context_t, char const*, int);
 void root_write_at_location(struct file_context_t, long, char const*, int);
 
-/**
- * TODO: remove what is not used
- */
-/*
-void get_top_dir(struct file_context_t ctx, struct directory_t *pdir);
-void list_keys(struct file_context_t ctx, struct directory_t *pdir, 
-               struct key_t ** pkeys, int *pnkeys);
-void get_blob(struct file_context_t ctx, struct key_t *pkey, char **blob);
-void dump_contents(struct file_context_t ctx);
-
-//
-// Bootstrapping logic / functionality return style
-//
-struct TopDirectory read_top_dir(struct file_context_t);
-struct TopDirectory_v2 read_top_dir_v2(struct file_context_t);
-char* read_blob(struct file_context_t, struct key_t const*);
-struct key_list_t read_keys(struct file_context_t, struct directory_t const*);
-
-void root_reserve_at_location(struct file_context_t, long location, int size);
-void root_reserve(struct file_context_t, int size);
-*/
 #endif // bootstrap_h
