@@ -82,6 +82,7 @@ void read_top_dir_record(struct llio_t*);
 // public functions, no state modifications
 //
 struct directory_record_t read_dir_record_by_key(struct llio_t const*, struct key_t const*);
+struct generic_record_t mmapr_generic_record_by_location(struct llio_t const*, uint64_t);
 struct generic_record_t read_generic_record_by_location(struct llio_t const*, uint64_t);
 struct keys_list_record_t read_keys_list_record_for_dir(struct llio_t const*, struct directory_t const*);
 

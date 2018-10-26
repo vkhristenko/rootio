@@ -130,22 +130,42 @@ struct directory_record_t read_dir_record_by_key(struct llio_t const*llio, struc
     return record;
 }
 
+struct generic_record_t mmapr_generic_record_by_location(struct llio_t const* llio,
+                                                         uint64_t location) {
+    struct generic_record_t record;
+    
+    // need to read the size first
+    root_seek(llio->fctx, location);
+    char total_bytes[4];
+    char *tmptmp = total_bytes;
+    size_t nbytes = read(llio->fctx.fd, tmptmp, 4);
+    uint32_t nbytes_total = get_u32((char**)&tmptmp);
+
+    // memmap this record
+    char *buffer = 
+        (char*)mmap(0, nbytes_total, PROT_READ, MAP_SHARED, llio->fctx.fd, location);
+
+    // deser the key
+    from_buf_key(&buffer, &record.key);
+    record.blob = buffer;
+
+    // note we do not unmap the blob
+    return record;
+}
+
 struct generic_record_t read_generic_record_by_location(struct llio_t const*llio, uint64_t location) {
     struct generic_record_t record;
 
     // read into mem
     // first read the 4 bytes for total_bytes per record
     // then, the bytes for the record - 4
-//    fseek(llio->fctx.pfile, location, SEEK_SET);
     root_seek(llio->fctx, location);
     char total_bytes[4];
     char *tmptmp = total_bytes;
-//    size_t nbytes = fread(tmptmp, 1, 4, llio->fctx.pfile);
     size_t nbytes = read(llio->fctx.fd, tmptmp, 4);
     uint32_t nbytes_total = get_u32((char**)&tmptmp);
     char *buffer = malloc(nbytes_total); char *tmp = buffer;
     memcpy(buffer, total_bytes, 4); buffer+=4;
-//    nbytes = fread(buffer, 1, nbytes_total - 4, llio->fctx.pfile);
     nbytes = read(llio->fctx.fd, (void*)buffer, nbytes_total - 4);
     buffer -= 4;
 
