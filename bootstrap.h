@@ -223,9 +223,10 @@ struct TopDirectory {
     struct directory_t dir;
 };
 
-struct file_context_t open_context(char const*, char const*);
+struct file_context_t open_context(char const*, int);
 void close_context(struct file_context_t);
 void root_write(struct file_context_t, char const*, int);
 void root_write_at_location(struct file_context_t, long, char const*, int);
+void root_seek(struct file_context_t, uint64_t);
 
 #endif // bootstrap_h

@@ -509,7 +509,7 @@ void root_write_at_location(struct file_context_t ctx, long location, char const
     write(ctx.fd, (void*)buf, size);
 }
 
-struct file_context_t open_context(char const*filename, char const* opts) {
+struct file_context_t open_context(char const*filename, int opts) {
     struct file_context_t ctx;
     ctx.fd = open(filename, opts);
     return ctx;
@@ -517,4 +517,8 @@ struct file_context_t open_context(char const*filename, char const* opts) {
 
 void close_context(struct file_context_t ctx) {
     close(ctx.fd);
+}
+
+void root_seek(struct file_context_t ctx, uint64_t location) {
+    lseek(ctx.fd, location, SEEK_SET);
 }
