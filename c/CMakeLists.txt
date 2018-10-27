@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 # keep project version in here for now
-project (rootio-c VERSION 0.0.0)
+project (rootio VERSION 0.0.0)
 
 # search module path
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
