@@ -17,7 +17,7 @@ struct localfs_file_context_t {
     struct logical_structure_t                  structure;
 };
 
-struct localfs_file_t         localfs_open_file(char const*, int);
+struct localfs_file_t         localfs_open_file(char const*, int, int);
 void                          localfs_close_file(struct localfs_file_t);
 void                          localfs_write_to_file(struct localfs_file_t, char const*, int);
 void                          localfs_write_to_file_at(struct localfs_file_t, long, char const*, int);

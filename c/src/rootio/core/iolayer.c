@@ -1,4 +1,5 @@
 #include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -17,9 +18,9 @@ void localfs_write_to_file_at(struct localfs_file_t ctx, long location, char con
     write(ctx.fd, (void*)buf, size);
 }
 
-struct localfs_file_t localfs_open_file(char const*filename, int opts) {
+struct localfs_file_t localfs_open_file(char const*filename, int flags, int mode) {
     struct localfs_file_t ctx;
-    ctx.fd = open(filename, opts);
+    ctx.fd = open(filename, flags, mode);
     return ctx;
 }
 
@@ -185,7 +186,7 @@ struct generic_record_t localfs_read_generic_record_at(struct localfs_file_conte
 struct localfs_file_context_t localfs_open_to_read(char const* filename) {
     struct localfs_file_context_t ctx;
     printf("open to read filename = %s\n", filename);
-    ctx.file = localfs_open_file(filename, O_RDONLY);
+    ctx.file = localfs_open_file(filename, O_RDONLY, 0);
 
     /* initialization section */
     localfs_read_file_header(&ctx);
@@ -199,7 +200,9 @@ struct localfs_file_context_t localfs_open_to_read(char const* filename) {
 struct localfs_file_context_t localfs_open_to_write(char const* filename) {
     struct localfs_file_context_t ctx;
     printf("open to write filename = %s\n", filename);
-    ctx.file = localfs_open_file(filename, O_WRONLY);
+    int flags = O_WRONLY | O_CREAT | O_TRUNC;
+    int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    ctx.file = localfs_open_file(filename, flags, mode);
 
     // write the "root" header
     char *root = "root";
