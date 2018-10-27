@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "rootio/core/iolayer.h"
+#include "rootio/core/localfs.h"
 #include "rootio/core/simulations.h"
 #include "rootio/core/aux.h"
 
@@ -96,14 +96,16 @@ int main(int argc, char** argv) {
            ctx.structure.location, 100 + ctx.structure.top_dir_rec.key.total_bytes);
 
     // we simulate the streamer and free segments records
-    simulate_streamer_record(&ctx);
-    simulate_free_segments_record(&ctx);
+    struct streamer_record_t streamer_record = 
+        simulate_streamer_record(&ctx.structure);
+    struct free_segments_record_t free_segments_record = 
+        simulate_free_segments_record(&ctx.structure);
 
     printf("--- simulated streamer, free segments and top dir keys list records ---\n");
 
-    print_key(&ctx.structure.streamer_record.key);
+    print_key(&streamer_record.key);
     printf("- - - - - - - - - - - - - -\n");
-    print_key(&ctx.structure.free_segments_record.key);
+    print_key(&free_segments_record.key);
     printf("- - - - - - - - - - - - - -\n");
 
     struct generic_record_t test_record = simulate_test_record(&ctx, 
@@ -126,7 +128,9 @@ int main(int argc, char** argv) {
     printf("location to write = %lu and should be %d\n",
            ctx.structure.location, 100 + ctx.structure.top_dir_rec.key.total_bytes + 
            keys_list_record.key.total_bytes + test_record.key.total_bytes);
-    
+   
+    localfs_write_streamer_record(&ctx, &streamer_record);
+    localfs_write_free_segments_record(&ctx, &free_segments_record);
     localfs_close_from_write(&ctx);
     
     print_key(&keys_list_record.key);

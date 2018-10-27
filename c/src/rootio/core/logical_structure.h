@@ -252,8 +252,8 @@ struct logical_structure_t {
     uint64_t                                location;
     struct file_header_t                    header;
     struct top_dir_record_t                 top_dir_rec;
-    struct streamer_record_t                streamer_record;
-    struct free_segments_record_t           free_segments_record;
+//    struct streamer_record_t                streamer_record;
+//    struct free_segments_record_t           free_segments_record;
 };
 
 #endif // mops_core_logical_structure_h

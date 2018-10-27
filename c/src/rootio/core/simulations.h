@@ -1,9 +1,11 @@
 #ifndef mops_core_simulations_h
 #define mops_core_simulations_h
 
-#include "rootio/core/iolayer.h"
+#include "rootio/core/logical_structure.h"
 
-void simulate_streamer_record(struct localfs_file_context_t*);
-void simulate_free_segments_record(struct localfs_file_context_t*);
+struct streamer_record_t        simulate_streamer_record(
+    struct logical_structure_t*);
+struct free_segments_record_t   simulate_free_segments_record(
+    struct logical_structure_t*);
 
 #endif // mops_core_simulations_h

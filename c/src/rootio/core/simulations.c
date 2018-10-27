@@ -5,9 +5,10 @@
 #include "rootio/core/aux.h"
 #include "rootio/core/simulations.h"
 
-void simulate_streamer_record(struct localfs_file_context_t *ctx) {
+struct streamer_record_t simulate_streamer_record(
+        struct logical_structure_t *structure) {
     // init
-    ctx->structure.streamer_record.blob = NULL;
+    struct streamer_record_t streamer_record;
 
     // simulate blob
     uint32_t n_sinfo = 0u;
@@ -32,7 +33,8 @@ void simulate_streamer_record(struct localfs_file_context_t *ctx) {
     to_buf_pstring(&buffer_sinfo, &str_sinfo);
     put_u32(&buffer_sinfo, n_sinfo);
     put_u32(&buffer_sinfo, byte_count);
-    ctx->structure.streamer_record.blob = tmp_sinfo;
+//    ctx->structure.streamer_record.blob = tmp_sinfo;
+    streamer_record.blob = tmp_sinfo;
     
     // generate a key for that blob
     struct string_t class_name, obj_name, title_name;
@@ -41,35 +43,39 @@ void simulate_streamer_record(struct localfs_file_context_t *ctx) {
     ctor_nomemcopy_pstring(&class_name, "TList", 5);
     ctor_nomemcopy_pstring(&obj_name, streamer, strlen(streamer));
     ctor_nomemcopy_pstring(&title_name, tlist, strlen(tlist));
-    ctor_withnames_key(&ctx->structure.streamer_record.key, &class_name, &obj_name, &title_name);
-    ctx->structure.streamer_record.key.seek_pdir = ctx->structure.header.begin;
-    ctx->structure.streamer_record.key.key_bytes = size_key(&ctx->structure.streamer_record.key);
-    ctx->structure.streamer_record.key.obj_bytes = nbytes_sinfo;
-    ctx->structure.streamer_record.key.total_bytes = ctx->structure.streamer_record.key.obj_bytes +
-        ctx->structure.streamer_record.key.key_bytes;
+    ctor_withnames_key(&streamer_record.key, &class_name, &obj_name, &title_name);
+    streamer_record.key.seek_pdir = structure->header.begin;
+    streamer_record.key.key_bytes = size_key(&streamer_record.key);
+    streamer_record.key.obj_bytes = nbytes_sinfo;
+    streamer_record.key.total_bytes = streamer_record.key.obj_bytes +
+        streamer_record.key.key_bytes;
 
     // key and blob are ready
+    return streamer_record;
 }
 
-void simulate_free_segments_record(struct localfs_file_context_t *ctx) {
+struct free_segments_record_t simulate_free_segments_record(
+        struct logical_structure_t *structure) {
+    struct free_segments_record_t free_segments_record;
+
     // simulate N free segments 
     int nfree = 1;
-    ctx->structure.free_segments_record.length = nfree;
-    ctx->structure.free_segments_record.pfree = malloc(sizeof(struct free_t) * 
-        nfree);
-    ctor_pfree(ctx->structure.free_segments_record.pfree, 1000, 2000000000);
+    free_segments_record.length = nfree;
+    free_segments_record.pfree = malloc(sizeof(struct free_t) * nfree);
+    ctor_pfree(free_segments_record.pfree, 2000000000, 2000000000);
 
     // generate the key for that list
     struct string_t class_name;
     ctor_nomemcopy_pstring(&class_name, "TFile", 5);
-    ctor_withnames_key(&ctx->structure.free_segments_record.key, &class_name, 
-                       &ctx->structure.top_dir_rec.named.name, 
-                       &ctx->structure.top_dir_rec.named.title);
-    ctx->structure.free_segments_record.key.seek_pdir = ctx->structure.header.begin;
-    ctx->structure.free_segments_record.key.key_bytes = size_key(&ctx->structure.free_segments_record.key);
-    ctx->structure.free_segments_record.key.obj_bytes = size_pfree(ctx->structure.free_segments_record.pfree);
-    ctx->structure.free_segments_record.key.total_bytes = ctx->structure.free_segments_record.key.key_bytes + 
-        ctx->structure.free_segments_record.key.obj_bytes;
+    ctor_withnames_key(&free_segments_record.key, &class_name, 
+                       &structure->top_dir_rec.named.name, 
+                       &structure->top_dir_rec.named.title);
+    free_segments_record.key.seek_pdir = structure->header.begin;
+    free_segments_record.key.key_bytes = size_key(&free_segments_record.key);
+    free_segments_record.key.obj_bytes = size_pfree(free_segments_record.pfree);
+    free_segments_record.key.total_bytes = free_segments_record.key.key_bytes + 
+        free_segments_record.key.obj_bytes;
 
     // key and free list are ready
+    return free_segments_record;
 }

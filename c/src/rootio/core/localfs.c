@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "rootio/core/iolayer.h"
+#include "rootio/core/localfs.h"
 #include "rootio/core/aux.h"
 #include "rootio/core/debug.h"
 
@@ -43,39 +43,42 @@ void localfs_read_file_header(struct localfs_file_context_t *ctx) {
     free(tmp);
 }
 
-void localfs_read_streamer_record(struct localfs_file_context_t *ctx) {
+struct streamer_record_t localfs_read_streamer_record(
+        struct localfs_file_context_t *ctx) {
     // seek to the streamer and read key + blob
-//    fseek(ctx->structure.file.pfile, ctx->structure.header.seek_info, SEEK_SET);
     localfs_seek_to(ctx->file, ctx->structure.header.seek_info);
     char *buffer = malloc(ctx->structure.header.nbytes_info);
-//    size_t nbytes = fread(buffer, 1, ctx->structure.header.nbytes_info, ctx->structure.file.pfile);
     size_t nbytes = read(ctx->file.fd, (void*)buffer, ctx->structure.header.nbytes_info);
     char *tmp;
 
     // deser key and assign the blob
-    from_buf_key(&buffer, &ctx->structure.streamer_record.key);
-    ctx->structure.streamer_record.blob = (char*)buffer;
+    struct streamer_record_t streamer_record;
+    from_buf_key(&buffer, &streamer_record.key);
+    streamer_record.blob = (char*)buffer;
+    return streamer_record;
 }
 
-void localfs_read_free_segments_record(struct localfs_file_context_t *ctx) {
+struct free_segments_record_t localfs_read_free_segments_record(
+        struct localfs_file_context_t *ctx) {
     // read into the buffer free segments record
-//    fseek(ctx->structure.file.pfile, ctx->structure.header.seek_free, SEEK_SET);
     localfs_seek_to(ctx->file, ctx->structure.header.seek_free);
     char *buffer = malloc(ctx->structure.header.nbytes_free);
-//    size_t nbytes = fread(buffer, 1, ctx->structure.header.nbytes_free, ctx->structure.file.pfile);
     size_t nbytes = read(ctx->file.fd, (void*)buffer, ctx->structure.header.nbytes_free);
     char *tmp = buffer;
 
     // deser key + free[n]
-    from_buf_key(&buffer, &ctx->structure.free_segments_record.key);
-    ctx->structure.free_segments_record.length = ctx->structure.header.nfree;
-    ctx->structure.free_segments_record.pfree = malloc(ctx->structure.free_segments_record.key.obj_bytes);
-    struct free_t *ifree = ctx->structure.free_segments_record.pfree;
+    struct free_segments_record_t free_segments_record;
+    from_buf_key(&buffer, &free_segments_record.key);
+    free_segments_record.length = ctx->structure.header.nfree;
+    free_segments_record.pfree = malloc(free_segments_record.key.obj_bytes);
+    struct free_t *ifree = free_segments_record.pfree;
     for (int i=0; i<ctx->structure.header.nfree; i++) {
          from_buf_pfree(&buffer, &(ifree[i]));
     }
 
     free(tmp);
+
+    return free_segments_record;
 }
 
 void localfs_read_top_dir_record(struct localfs_file_context_t *ctx) {
@@ -190,8 +193,8 @@ struct localfs_file_context_t localfs_open_to_read(char const* filename) {
 
     /* initialization section */
     localfs_read_file_header(&ctx);
-    localfs_read_streamer_record(&ctx);
-    localfs_read_free_segments_record(&ctx);
+    //localfs_read_streamer_record(&ctx);
+    //localfs_read_free_segments_record(&ctx);
     localfs_read_top_dir_record(&ctx);
 
     return ctx;
@@ -260,8 +263,8 @@ void localfs_close_from_read(struct localfs_file_context_t *ctx) {
 
 void localfs_close_from_write(struct localfs_file_context_t *ctx) {
     // actions required at closing time
-    localfs_write_streamer_record(ctx);
-    localfs_write_free_segments_record(ctx);
+    //localfs_write_streamer_record(ctx);
+    //localfs_write_free_segments_record(ctx);
     localfs_write_end_byte(ctx);
     localfs_write_top_dir_record(ctx);
     localfs_write_file_header(ctx);
@@ -294,47 +297,47 @@ void localfs_write_top_dir_record(struct localfs_file_context_t *ctx) {
     free(tmp);
 }
 
-void localfs_write_streamer_record(struct localfs_file_context_t *ctx) {
-    //fseek(ctx->structure.file.pfile, ctx->structure.location, SEEK_SET);
+void localfs_write_streamer_record(struct localfs_file_context_t *ctx,
+                                   struct streamer_record_t *streamer_record) {
     localfs_seek_to(ctx->file, ctx->structure.location);
     
     // postcondition
-    ctx->structure.streamer_record.key.seek_key = ctx->structure.location;
+    streamer_record->key.seek_key = ctx->structure.location;
 
-    char *buffer = malloc(ctx->structure.streamer_record.key.key_bytes);
+    char *buffer = malloc(streamer_record->key.key_bytes);
     char *tmp = buffer;
-    to_buf_key(&buffer, &ctx->structure.streamer_record.key);
-    localfs_write_to_file(ctx->file, tmp, ctx->structure.streamer_record.key.key_bytes);
-    localfs_write_to_file(ctx->file, ctx->structure.streamer_record.blob, 
-               ctx->structure.streamer_record.key.total_bytes - ctx->structure.streamer_record.key.key_bytes);
+    to_buf_key(&buffer, &streamer_record->key);
+    localfs_write_to_file(ctx->file, tmp, streamer_record->key.key_bytes);
+    localfs_write_to_file(ctx->file, streamer_record->blob, 
+        streamer_record->key.total_bytes - streamer_record->key.key_bytes);
 
     // postconditions
-    ctx->structure.location += ctx->structure.streamer_record.key.total_bytes;
-    ctx->structure.header.seek_info = ctx->structure.streamer_record.key.seek_key;
-    ctx->structure.header.nbytes_info = ctx->structure.streamer_record.key.total_bytes;
+    ctx->structure.location += streamer_record->key.total_bytes;
+    ctx->structure.header.seek_info = streamer_record->key.seek_key;
+    ctx->structure.header.nbytes_info = streamer_record->key.total_bytes;
 
     free(tmp);
 }
 
-void localfs_write_free_segments_record(struct localfs_file_context_t *ctx) {
-    //fseek(ctx->structure.file.pfile, ctx->structure.location, SEEK_SET);
+void localfs_write_free_segments_record(struct localfs_file_context_t *ctx,
+                                        struct free_segments_record_t *record) {
     localfs_seek_to(ctx->file, ctx->structure.location);
 
     // postcondition
-    ctx->structure.free_segments_record.key.seek_key = ctx->structure.location;
+    record->key.seek_key = ctx->structure.location;
 
-    char *buffer = malloc(ctx->structure.free_segments_record.key.total_bytes);
+    char *buffer = malloc(record->key.total_bytes);
     char *tmp = buffer;
-    to_buf_key(&buffer, &ctx->structure.free_segments_record.key);
-    for (int i=0; i<ctx->structure.free_segments_record.length; i++)
-        to_buf_pfree(&buffer, &(ctx->structure.free_segments_record.pfree[i]));
-    localfs_write_to_file(ctx->file, tmp, ctx->structure.free_segments_record.key.total_bytes);
+    to_buf_key(&buffer, &record->key);
+    for (int i=0; i<record->length; i++)
+        to_buf_pfree(&buffer, &(record->pfree[i]));
+    localfs_write_to_file(ctx->file, tmp, record->key.total_bytes);
 
     // postconditions
-    ctx->structure.location += ctx->structure.free_segments_record.key.total_bytes;
-    ctx->structure.header.nfree = ctx->structure.free_segments_record.length;
-    ctx->structure.header.seek_free = ctx->structure.free_segments_record.key.seek_key;
-    ctx->structure.header.nbytes_free = ctx->structure.free_segments_record.key.total_bytes;
+    ctx->structure.location += record->key.total_bytes;
+    ctx->structure.header.nfree = record->length;
+    ctx->structure.header.seek_free = record->key.seek_key;
+    ctx->structure.header.nbytes_free = record->key.total_bytes;
     free(tmp);
 }
 

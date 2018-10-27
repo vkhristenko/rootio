@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "rootio/core/iolayer.h"
+#include "rootio/core/localfs.h"
 
 int main(int argc, char** argv) {
     if (argc==1) {
@@ -13,21 +13,26 @@ int main(int argc, char** argv) {
     char *filename = argv[1];
     printf("filename = %s\n", filename);
 
+    // open for a read using local filesystem api
     struct localfs_file_context_t ctx = localfs_open_to_read(filename);
 
+    // transfer a file header to memory
     localfs_read_file_header(&ctx);
     print_file_header(&ctx.structure.header);
 
     printf("--- ---- ---\n");
 
-    localfs_read_streamer_record(&ctx);
-    print_key(&ctx.structure.streamer_record.key);
+    // transfer a streamer record to memory
+    struct streamer_record_t streamer_record = localfs_read_streamer_record(&ctx);
+    print_key(&streamer_record.key);
 
-    localfs_read_free_segments_record(&ctx);
-    print_key(&ctx.structure.free_segments_record.key);
-    printf("nfree = %d\n", ctx.structure.free_segments_record.length);
-    for (int i=0; i<ctx.structure.free_segments_record.length; i++)
-        print_pfree(&(ctx.structure.free_segments_record.pfree[i]));
+    // transfer a free segments record to memory
+    struct free_segments_record_t free_segments_record = 
+        localfs_read_free_segments_record(&ctx);
+    print_key(&free_segments_record.key);
+    printf("nfree = %d\n", free_segments_record.length);
+    for (int i=0; i<free_segments_record.length; i++)
+        print_pfree(&(free_segments_record.pfree[i]));
 
     printf("--- ---- ---\n");
 

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "rootio/core/iolayer.h"
+#include "rootio/core/localfs.h"
 #include "rootio/core/debug.h"
 
 void recurse(struct localfs_file_context_t *ctx, struct directory_t* dir) {
