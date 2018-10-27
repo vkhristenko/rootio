@@ -53,3 +53,7 @@ dkms.conf
 
 # root files
 *.root
+
+# for in source tree builds
+build/
+bin/
