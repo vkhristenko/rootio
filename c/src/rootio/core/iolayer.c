@@ -5,6 +5,7 @@
 
 #include "rootio/core/iolayer.h"
 #include "rootio/core/aux.h"
+#include "rootio/core/debug.h"
 
 void localfs_write_to_file(struct localfs_file_t ctx, char const* buf, int size) {
     write(ctx.fd, (void*)buf, size);

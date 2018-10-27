@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "rootio/core/iolayer.h"
+#include "rootio/core/debug.h"
 
 void recurse(struct localfs_file_context_t *ctx, struct directory_t* dir) {
     struct keys_list_record_t keys_list_record = 
@@ -50,7 +51,7 @@ int main(int argc, char** argv) {
     int irec = 0;
     while (location < ctx.structure.header.end) {
         struct generic_record_t record = 
-            localfs_read_generic_record_at(&ctx, ctx.structure.location);
+            localfs_read_generic_record_at(&ctx, location);
         print_key_info(&record.key);
         char *blob = record.blob;
 
