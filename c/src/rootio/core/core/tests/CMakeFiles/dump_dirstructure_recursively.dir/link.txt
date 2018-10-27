@@ -1,1 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/cc  -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/dump_dirstructure_recursively.dir/dump_dirstructure_recursively.o  -o dump_dirstructure_recursively ../librootio-core.dylib 

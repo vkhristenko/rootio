@@ -57,3 +57,5 @@ dkms.conf
 # for in source tree builds
 build/
 bin/
+release/
+debug/
