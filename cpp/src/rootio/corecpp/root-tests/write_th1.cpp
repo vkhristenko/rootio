@@ -9,11 +9,22 @@ extern "C" {
 
 }}
 
+namespace rootio {
+
+template<typename T>
+struct Wrapper : public T {};
+
+class Key : public Wrapper<::rootio::capi::key_t> {
+public:
+    Key() {}
+};
+
+}
+
 #include "TH1F.h"
 #include "TBufferFile.h"
 
 rootio::capi::generic_record_t make_hist_record(
-        rootio::capi::localfs_file_context_t const& ctx, 
         rootio::capi::directory_t const& dir) {
     rootio::capi::generic_record_t record;
 
@@ -26,6 +37,7 @@ rootio::capi::generic_record_t make_hist_record(
     auto raw = buffer.Buffer();
 
     // create a record
+    // fill blob specific information
     record.blob = raw;
     rootio::capi::string_t class_name, obj_name, obj_title;
     rootio::capi::ctor_nomemcopy_pstring(&class_name, "TH1F", 4);
@@ -35,10 +47,12 @@ rootio::capi::generic_record_t make_hist_record(
                        &class_name,
                        &obj_name,
                        &obj_title);
-    record.key.seek_pdir = dir.seek_dir;
     record.key.key_bytes = rootio::capi::size_key(&record.key);
     record.key.obj_bytes = buffer.Length();
     record.key.total_bytes = record.key.obj_bytes + record.key.key_bytes;
+
+    // link this key to a specific directory
+    record.key.seek_pdir = dir.seek_dir;
 
     return record;
 }
@@ -76,7 +90,7 @@ int main(int argc, char **argv) {
         rootio::capi::simulate_free_segments_record(&ctx.structure);
 
     // data records
-    auto hist_record = make_hist_record(ctx, ctx.structure.top_dir_rec.dir);
+    auto hist_record = make_hist_record(ctx.structure.top_dir_rec.dir);
     auto keys_list_record = make_keys_list_record_for_dir(ctx, 
         ctx.structure.top_dir_rec.dir, hist_record);
     rootio::capi::localfs_write_generic_record(&ctx, &hist_record);
