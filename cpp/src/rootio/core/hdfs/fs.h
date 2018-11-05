@@ -2,6 +2,7 @@
 #define rootio_core_hdfs_fs_h
 
 #include "hdfs.h"
+#include "rootio/core/logical_structure.h"
 
 /*
  * Hadoop File System API
@@ -13,8 +14,8 @@ struct hdfs_file_t {
 
 struct hdfs_file_context_t {
     struct hdfs_file_t                  file;
-    struct logica_structure_t           structure;
-}
+    struct logical_structure_t           structure;
+};
 
 /*
  * file api
@@ -68,25 +69,25 @@ void                          hdfs_write_file_header(
 void                          hdfs_write_top_dir_record(
                                     struct hdfs_file_context_t*);
 
-void                          localfs_write_keys_list_record_for_dir(
+void                          hdfs_write_keys_list_record_for_dir(
                                     struct hdfs_file_context_t*,
                                     struct keys_list_record_t*,
                                     struct directory_t*);
 
 // do increment the location counter
-void                          localfs_write_streamer_record(
+void                          hdfs_write_streamer_record(
                                     struct hdfs_file_context_t*,
                                     struct streamer_record_t*);
-void                          localfs_write_free_segments_record(
+void                          hdfs_write_free_segments_record(
                                     struct hdfs_file_context_t*,
                                     struct free_segments_record_t*);
-void                          localfs_write_end_byte(
+void                          hdfs_write_end_byte(
                                     struct hdfs_file_context_t*);
 // writing a generic record: key + blob
-void                          localfs_write_generic_record(
+void                          hdfs_write_generic_record(
                                     struct hdfs_file_context_t*,
                                     struct generic_record_t *);
-void                          localfs_write_directory_record(
+void                          hdfs_write_directory_record(
                                     struct hdfs_file_context_t*,
                                     struct directory_record_t*);
 

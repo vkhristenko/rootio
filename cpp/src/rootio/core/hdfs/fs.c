@@ -18,9 +18,9 @@ void hdfs_write_to_file_at(struct hdfs_file_t ctx, long location, char const*buf
     hdfsWrite(ctx.fs, ctx.fd, (void*)buf, size);
 }
 
-struct hdfs_file_t localfs_open_file(char const*filename, int flags) {
-    struct hfds_file_t ctx;
-    ctx.fs = hdfsConnect("default");
+struct hdfs_file_t hdfs_open_file(char const*filename, int flags) {
+    struct hdfs_file_t ctx;
+    ctx.fs = hdfsConnect("default", 0);
     ctx.fd = hdfsOpenFile(ctx.fs, filename, flags, 0, 0, 0);
     return ctx;
 }
@@ -160,7 +160,7 @@ struct directory_record_t hdfs_read_dir_record_by_key(
     char *buffer = malloc(key->total_bytes);
     char *tmp = buffer;
     //size_t nbytes = fread(buffer, 1, key->total_bytes, ctx->structure.file.pfile);
-    size_t nbytes = hdfs_read_file_from(ctx->file, 
+    size_t nbytes = hdfs_read_from_file(ctx->file, 
         (void*)buffer, key->total_bytes);
 
     // deser Key + dir
@@ -205,9 +205,7 @@ struct hdfs_file_context_t hdfs_open_to_read(char const* filename) {
     ctx.file = hdfs_open_file(filename, O_RDONLY);
 
     /* initialization section */
-    hfds_read_file_header(&ctx);
-    //localfs_read_streamer_record(&ctx);
-    //localfs_read_free_segments_record(&ctx);
+    hdfs_read_file_header(&ctx);
     hdfs_read_top_dir_record(&ctx);
 
     return ctx;
@@ -379,7 +377,6 @@ void hdfs_write_end_byte(struct hdfs_file_context_t* ctx) {
 
     // write
     char *end = "v";
-//    localfs_write_to_file(ctx->structure.file, end, 1);
 
     // postcondition
     ctx->structure.location += 1;
