@@ -249,6 +249,24 @@ struct SimpleFileHeader {
     uint32_t nfree_;
 };
 
+class PhysWriter {
+public:
+    using GenericRecord = std::pair<>
+
+    explicit PhysWriter(SinkInterface *sink) : sink_{sink} {}
+
+    ~PhysWriter() { sink_->Close(); delete sink_; }
+
+    void WriteFileHeader(SimpleFileHeader const&);
+
+    void Write();
+
+    void Write
+
+protected:
+    SinkInterface *sink_;
+};
+
 class PhysReader {
 public:
     using GenericRecord = std::pair<Key, std::vector<uint8_t>>;
