@@ -1,18 +1,112 @@
 #ifndef XXX_CORE_PHYS_DECLS_H
 #define XXX_CORE_PHYS_DECLS_H
 
-#include <stdio.h>
 #include <inttypes.h>
 #include <stdint.h>
-#include <string.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <cstring>
 
 #include "XXX/core/common/aux.hpp"
 
 namespace XXX { namespace core { namespace phys {
 
 using namespace ::XXX::core::common;
+
+struct Seekable {
+    virtual void SeekTo(uint64_t const pos) = 0;
+    virtual uint64_t Pos() const = 0;
+};
+
+struct Closeable {
+    virtual void Close() = 0;
+};
+
+class SourceInterface : public Seekable, public Closeable {
+public:
+    explicit SourceInterface(std::string const& path) : path_{path} {}
+
+    virtual ~SourceInterface() {}
+
+    virtual void Read(uint64_t const nbytes, void *data) = 0;
+
+    virtual void ReadAt(uint64_t const pos, uint64_t const nbytes, void *data) = 0;
+
+protected:
+    std::string path_;
+};
+
+class SinkInterface : public Seekable, public Closeable {
+public:
+    explicit SinkInterface(std::string const& path) : path_{path} {}
+
+    virtual ~SinkInterface() {}
+
+    virtual void Write(uint64_t const nbytes, void *data) = 0;
+
+    virtual void WriteAt(uint64_t const pos, uint64_t const nbytes, void *data) = 0;
+
+protected:
+    std::string path_;
+};
+
+class OutputFile : public SinkInterface {
+public:
+    explicit OutputFile(std::string const& path)
+        : SinkInterface{path}
+        , fd_{open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 
+            S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)}
+    {}
+
+    ~OutputFile() override {}
+
+    // FIXME should be the same for both interfaces
+    void SeekTo(uint64_t const pos) override { lseek(fd_, pos, SEEK_SET); }
+    uint64_t Pos() const override { return lseek(fd_, 0, SEEK_CUR); }
+    
+    void Write(uint64_t nbytes, void *data) override { write(fd_, (void*)data, nbytes); }
+
+    void WriteAt(uint64_t const pos, uint64_t const nbytes, void *data) override {
+        this->SeekTo(pos);
+        this->Write(nbytes, data);
+    }
+   
+    void Close() override { close(fd_); }
+
+protected:
+    int fd_;
+};
+
+class InputFile : public SourceInterface {
+public:
+    explicit InputFile(std::string const& path) 
+        : SourceInterface{path}
+        , fd_{open(path_.c_str(), O_RDONLY, 0)}
+    {}
+
+    ~InputFile() override {}
+
+    void SeekTo(uint64_t const pos) override { lseek(fd_, pos, SEEK_SET); }
+    uint64_t Pos() const override { return lseek(fd_, 0, SEEK_CUR); }
+
+    void Read(uint64_t const nbytes, void *data) override { read(fd_, data, nbytes); }
+
+    void ReadAt(uint64_t const pos, uint64_t const nbytes, void *data) override {
+        this->SeekTo(pos);
+        this->Read(nbytes, data);
+    }
+
+    void Close() override { close(fd_); }
+
+protected:
+    int fd_;
+};
 
 struct Object {
     void SerTo(uint8_t ** buffer) const {
@@ -155,9 +249,31 @@ struct SimpleFileHeader {
     uint32_t nfree_;
 };
 
-struct GenericRecord {
-    Key key_;
-    uint8_t * blob_;
+class PhysReader {
+public:
+    using GenericRecord = std::pair<Key, std::vector<uint8_t>>;
+    using FreeSegmentsRecord = std::pair<Key, std::vector<FreeSegment>>;
+
+    explicit PhysReader(SourceInterface *source) : source_{source} {}
+
+    ~PhysReader() { source_->Close(); delete source_; }
+
+    SimpleFileHeader ReadFileHeader();
+
+    GenericRecord Read();
+
+    GenericRecord ReadN(uint64_t const);
+
+    GenericRecord ReadAt(uint64_t const pos);
+
+    GenericRecord ReadNAt(uint64_t const pos, uint64_t const nbytes);
+
+    GenericRecord ReadByKey(Key const&);
+
+    FreeSegmentsRecord ReadFreeSegmentsRecord(SimpleFileHeader const&);
+
+protected:
+    SourceInterface *source_;
 };
 
 }}}
