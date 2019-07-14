@@ -20,12 +20,17 @@ namespace XXX { namespace core { namespace phys {
 using namespace ::XXX::core::common;
 
 struct Seekable {
-    virtual void SeekTo(uint64_t const pos) = 0;
-    virtual uint64_t Pos() const = 0;
+    virtual void SeekTo(int64_t const pos) = 0;
+    virtual int64_t Pos() const = 0;
 };
 
 struct Closeable {
     virtual void Close() = 0;
+};
+
+struct Reservable {
+    virtual void Reserve(int64_t const nbytes) = 0;
+    virtual void Reserve(int64_t const pos, int64_t const nbytes) = 0;
 };
 
 class SourceInterface : public Seekable, public Closeable {
@@ -34,23 +39,23 @@ public:
 
     virtual ~SourceInterface() {}
 
-    virtual void Read(uint64_t const nbytes, void *data) = 0;
+    virtual void Read(int64_t const nbytes, void *data) = 0;
 
-    virtual void ReadAt(uint64_t const pos, uint64_t const nbytes, void *data) = 0;
+    virtual void ReadAt(int64_t const pos, int64_t const nbytes, void *data) = 0;
 
 protected:
     std::string path_;
 };
 
-class SinkInterface : public Seekable, public Closeable {
+class SinkInterface : public Seekable, public Closeable , public Reservable {
 public:
     explicit SinkInterface(std::string const& path) : path_{path} {}
 
     virtual ~SinkInterface() {}
 
-    virtual void Write(uint64_t const nbytes, void *data) = 0;
+    virtual void Write(int64_t const nbytes, void *data) = 0;
 
-    virtual void WriteAt(uint64_t const pos, uint64_t const nbytes, void *data) = 0;
+    virtual void WriteAt(int64_t const pos, int64_t const nbytes, void *data) = 0;
 
 protected:
     std::string path_;
@@ -67,14 +72,24 @@ public:
     ~OutputFile() override {}
 
     // FIXME should be the same for both interfaces
-    void SeekTo(uint64_t const pos) override { lseek(fd_, pos, SEEK_SET); }
-    uint64_t Pos() const override { return lseek(fd_, 0, SEEK_CUR); }
+    void SeekTo(int64_t const pos) override { lseek(fd_, pos, SEEK_SET); }
+    int64_t Pos() const override { return lseek(fd_, 0, SEEK_CUR); }
     
-    void Write(uint64_t nbytes, void *data) override { write(fd_, (void*)data, nbytes); }
+    void Write(int64_t nbytes, void *data) override { write(fd_, (void*)data, nbytes); }
 
-    void WriteAt(uint64_t const pos, uint64_t const nbytes, void *data) override {
+    void WriteAt(int64_t const pos, int64_t const nbytes, void *data) override {
         this->SeekTo(pos);
         this->Write(nbytes, data);
+    }
+
+    void Reserve(int64_t const nbytes) override {
+        std::vector<uint8_t> buffer(nbytes, 0);
+        this->Write(nbytes, buffer.data());
+    }
+
+    void Reserve(int64_t const pos, int64_t const nbytes) override {
+        std::vector<uint8_t> buffer(nbytes, 0);
+        this->WriteAt(pos, nbytes, buffer.data());
     }
    
     void Close() override { close(fd_); }
@@ -92,12 +107,12 @@ public:
 
     ~InputFile() override {}
 
-    void SeekTo(uint64_t const pos) override { lseek(fd_, pos, SEEK_SET); }
-    uint64_t Pos() const override { return lseek(fd_, 0, SEEK_CUR); }
+    void SeekTo(int64_t const pos) override { lseek(fd_, pos, SEEK_SET); }
+    int64_t Pos() const override { return lseek(fd_, 0, SEEK_CUR); }
 
-    void Read(uint64_t const nbytes, void *data) override { read(fd_, data, nbytes); }
+    void Read(int64_t const nbytes, void *data) override { read(fd_, data, nbytes); }
 
-    void ReadAt(uint64_t const pos, uint64_t const nbytes, void *data) override {
+    void ReadAt(int64_t const pos, int64_t const nbytes, void *data) override {
         this->SeekTo(pos);
         this->Read(nbytes, data);
     }
@@ -125,7 +140,7 @@ struct Object {
         return 10u;
     }
 
-    uint16_t version_;
+    int16_t version_;
     uint32_t id_;
     uint32_t bits_;
 };
@@ -133,26 +148,26 @@ struct Object {
 struct FreeSegment {
     void SerTo(uint8_t** buffer) const {
         put_version(buffer, version_);
-        if (version_ > 1000u) {
-            put_u64(buffer, begin_);
-            put_u32(buffer, end_);
+        if (version_ > 1000) {
+            put_i64(buffer, begin_);
+            put_i64(buffer, end_);
         } else {
-            put_u32(buffer, static_cast<uint32_t>(begin_));
-            put_u32(buffer, static_cast<uint32_t>(end_));
+            put_i32(buffer, static_cast<int32_t>(begin_));
+            put_i32(buffer, static_cast<int32_t>(end_));
         }
     }
 
     void DeserFrom(uint8_t** buffer) {
         version_ = get_version(buffer);
-        begin_ = version_ > 1000u ? get_u64(buffer) : get_u32(buffer);
-        end_ = version_ > 1000u ? get_u64(buffer) : get_u32(buffer);
+        begin_ = version_ > 1000 ? get_i64(buffer) : get_i32(buffer);
+        end_ = version_ > 1000 ? get_i64(buffer) : get_i32(buffer);
     }
 
     static uint32_t StaticSize() { return 10; }
-    uint32_t Size() const { return version_ > 1000u ? StaticSize() + 8 : StaticSize();  }
+    uint32_t Size() const { return version_ > 1000 ? StaticSize() + 8 : StaticSize();  }
 
-    uint16_t version_;
-    uint64_t begin_, end_;
+    int16_t version_;
+    int64_t begin_, end_;
 };
 
 struct Datime {
@@ -171,124 +186,125 @@ struct Datime {
 
 struct Key {
     void SerTo(uint8_t **buffer) const {
-        put_u32(buffer, total_bytes_);
+        put_i32(buffer, total_bytes_);
         put_version(buffer, version_);
-        put_u32(buffer, obj_bytes_);
+        put_i32(buffer, obj_bytes_);
         date_time_.SerTo(buffer);
-        put_u16(buffer, key_bytes_);
-        put_u16(buffer, cycle_);
-        if (version_ > 1000u)
-            put_u64(buffer, seek_key_);
+        put_i16(buffer, key_bytes_);
+        put_i16(buffer, cycle_);
+        if (version_ > 1000)
+            put_i64(buffer, seek_key_);
         else 
-            put_u32(buffer, static_cast<uint32_t>(seek_key_));
+            put_i32(buffer, static_cast<int32_t>(seek_key_));
     }
 
     void DeserFrom(uint8_t **buffer) {
-        total_bytes_ = get_u32(buffer);
+        total_bytes_ = get_i32(buffer);
         version_ = get_version(buffer);
-        obj_bytes_ = get_u32(buffer);
+        obj_bytes_ = get_i32(buffer);
         date_time_.DeserFrom(buffer);
-        key_bytes_ = get_u16(buffer);
-        cycle_ = get_u16(buffer);
-        if (version_ > 1000u)
-            seek_key_ = get_u64(buffer);
+        key_bytes_ = get_i16(buffer);
+        cycle_ = get_i16(buffer);
+        if (version_ > 1000)
+            seek_key_ = get_i64(buffer);
         else 
-            seek_key_ = get_u32(buffer);
+            seek_key_ = get_i32(buffer);
     }
 
     static uint32_t StaticSize() { return Datime::StaticSize() + 18; }
-    uint32_t Size() const { return version_ > 1000u ? StaticSize() + 4 : StaticSize(); }
+    uint32_t Size() const { return version_ > 1000 ? StaticSize() + 4 : StaticSize(); }
     
-    uint32_t total_bytes_;
-    int16_t version_;
-    uint32_t obj_bytes_;
+    int32_t total_bytes_;
+    int32_t version_;
+    int32_t obj_bytes_;
     Datime date_time_;
-    uint16_t key_bytes_;
-    uint16_t cycle_;
-    uint64_t seek_key_;
+    int16_t key_bytes_;
+    int16_t cycle_;
+    int64_t seek_key_;
 };
 
 struct SimpleFileHeader {
     void SerTo(uint8_t **buffer) const {
-        put_u32(buffer, version_);
-        put_u32(buffer, begin_);
-        if (version_ > 1000000u) {
-            put_u64(buffer, end_);
-            put_u64(buffer, seek_free_);
-            put_u32(buffer, nbytes_free_);
-            put_u32(buffer, nfree_);
+        put_i32(buffer, version_);
+        put_i32(buffer, begin_);
+        if (version_ > 1000000) {
+            put_i64(buffer, end_);
+            //put_i64(buffer, seek_free_);
+            //put_i32(buffer, nbytes_free_);
+            //put_i32(buffer, nfree_);
         } else {
-            put_u32(buffer, end_);
-            put_u32(buffer, seek_free_);
-            put_u32(buffer, nbytes_free_);
-            put_u32(buffer, nfree_);
+            put_i32(buffer, end_);
+            //put_i32(buffer, seek_free_);
+            //put_i32(buffer, nbytes_free_);
+            //put_i32(buffer, nfree_);
         }
     }
 
     void DeserFrom(uint8_t **buffer) {
-        version_ = get_u32(buffer);
-        begin_ = get_u32(buffer);
-        if (version_ > 1000000u) {
-            end_ = get_u64(buffer);
-            seek_free_ = get_u64(buffer);
-            nbytes_free_ = get_u32(buffer);
-            nfree_ = get_u32(buffer);
+        version_ = get_i32(buffer);
+        begin_ = get_i32(buffer);
+        if (version_ > 1000000) {
+            end_ = get_i64(buffer);
+            //seek_free_ = get_i64(buffer);
+            //nbytes_free_ = get_i32(buffer);
+            //nfree_ = get_i32(buffer);
         } else {
-            end_ = get_u32(buffer);
-            seek_free_ = get_u32(buffer);
-            nbytes_free_ = get_u32(buffer);
-            nfree_ = get_u32(buffer);
+            end_ = get_i32(buffer);
+            //seek_free_ = get_i32(buffer);
+            //nbytes_free_ = get_i32(buffer);
+            //nfree_ = get_i32(buffer);
         }
     }
 
-    uint32_t version_;
-    uint32_t begin_;
-    uint64_t end_;
-    uint64_t seek_free_;
-    uint32_t nbytes_free_;
-    uint32_t nfree_;
+    int32_t version_;
+    int32_t begin_;
+    int64_t end_;
+//    int64_t seek_free_;
+//    int32_t nbytes_free_;
+//    int32_t nfree_;
 };
 
-class PhysWriter {
+class RecordWriter {
 public:
-    using GenericRecord = std::pair<>
+    using GenericRecord = std::pair<Key, std::vector<uint8_t>>;
 
-    explicit PhysWriter(SinkInterface *sink) : sink_{sink} {}
+    explicit RecordWriter(SinkInterface *sink) : sink_{sink} {}
 
-    ~PhysWriter() { sink_->Close(); delete sink_; }
+    ~RecordWriter() { sink_->Close(); delete sink_; }
 
     void WriteFileHeader(SimpleFileHeader const&);
 
-    void Write();
+    void Write(GenericRecord const&);
 
-    void Write
+    // with seek + write
+    void WriteAt(GenericRecord const&);
 
 protected:
     SinkInterface *sink_;
 };
 
-class PhysReader {
+class RecordReader {
 public:
     using GenericRecord = std::pair<Key, std::vector<uint8_t>>;
     using FreeSegmentsRecord = std::pair<Key, std::vector<FreeSegment>>;
 
-    explicit PhysReader(SourceInterface *source) : source_{source} {}
+    explicit RecordReader(SourceInterface *source) : source_{source} {}
 
-    ~PhysReader() { source_->Close(); delete source_; }
+    ~RecordReader() { source_->Close(); delete source_; }
 
     SimpleFileHeader ReadFileHeader();
 
-    GenericRecord Read();
+    GenericRecord TryRead();
 
-    GenericRecord ReadN(uint64_t const);
+    GenericRecord ReadN(int64_t const);
 
-    GenericRecord ReadAt(uint64_t const pos);
+    GenericRecord TryReadAt(int64_t const pos);
 
-    GenericRecord ReadNAt(uint64_t const pos, uint64_t const nbytes);
+    GenericRecord ReadNAt(int64_t const pos, int64_t const nbytes);
 
     GenericRecord ReadByKey(Key const&);
 
-    FreeSegmentsRecord ReadFreeSegmentsRecord(SimpleFileHeader const&);
+    //FreeSegmentsRecord ReadFreeSegmentsRecord(SimpleFileHeader const&);
 
 protected:
     SourceInterface *source_;

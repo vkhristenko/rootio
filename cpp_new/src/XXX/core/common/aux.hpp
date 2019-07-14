@@ -31,7 +31,7 @@ uint64_t get_u64(uint8_t **ptr);
 int64_t get_i64(uint8_t **ptr);
 double get_f64(uint8_t **ptr);
 float get_f32(uint8_t **ptr);
-uint16_t get_version(uint8_t **ptr);
+int16_t get_version(uint8_t **ptr);
 int get_string(uint8_t **src, uint8_t **dest);
 
 void put_u8(uint8_t **ptr, uint8_t);
@@ -41,7 +41,7 @@ void put_u64(uint8_t **ptr, uint64_t);
 void put_i16(uint8_t **ptr, int16_t);
 void put_i32(uint8_t **ptr, int32_t);
 void put_i64(uint8_t **ptr, int64_t);
-void put_version(uint8_t **ptr, uint16_t);
+void put_version(uint8_t **ptr, int16_t);
 void put_string(uint8_t **ptr, uint8_t const*, int);
 
 std::string get_string(uint8_t **buffer);

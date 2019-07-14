@@ -114,7 +114,7 @@ void put_f32(uint8_t **ptr, float value) {
     put_u32(ptr, (uint32_t)value);
 }
 
-uint16_t get_version(uint8_t **ptr) {
+int16_t get_version(uint8_t **ptr) {
     uint16_t v = get_u16(ptr);
     if ((v & 0x4000) == 0) 
         return (uint32_t)v;
@@ -124,7 +124,7 @@ uint16_t get_version(uint8_t **ptr) {
     return res;
 }
 
-void put_version(uint8_t **ptr, uint16_t version) {
+void put_version(uint8_t **ptr, int16_t version) {
     put_u16(ptr, version);
 }
 

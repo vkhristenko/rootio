@@ -6,7 +6,7 @@
 
 namespace XXX { namespace core { namespace phys {
 
-SimpleFileHeader PhysReader::ReadFileHeader() {
+SimpleFileHeader RecordReader::ReadFileHeader() {
     SimpleFileHeader fh;
     std::vector<uint8_t> buffer(100);
 
@@ -29,13 +29,20 @@ SimpleFileHeader PhysReader::ReadFileHeader() {
     return fh;
 }
 
-PhysReader::GenericRecord PhysReader::Read() {
+RecordReader::GenericRecord RecordReader::TryRead() {
     // first read the total bytes to read
-    uint32_t totalBytes;
+    int32_t totalBytes;
     std::array<uint8_t, 4> tmp;
     source_->Read(4, (void*)tmp.data());
     auto* tmpptr = tmp.data();
-    totalBytes = get_u32(&tmpptr);
+    totalBytes = get_i32(&tmpptr);
+
+    // empty record if 
+    if (totalBytes < 0) {
+        Key key;
+        key.total_bytes_ = totalBytes;
+        return {key, {}};
+    }
 
     // read the whole record
     std::vector<uint8_t> buffer(totalBytes);
@@ -53,7 +60,7 @@ PhysReader::GenericRecord PhysReader::Read() {
     return {key, std::move(buffer)};
 }
 
-PhysReader::GenericRecord PhysReader::ReadN(uint64_t const nbytes) {
+RecordReader::GenericRecord RecordReader::ReadN(int64_t const nbytes) {
     std::vector<uint8_t> buffer(nbytes);
     source_->Read(nbytes, (void*)buffer.data());
     auto *ptr = buffer.data();
@@ -63,26 +70,27 @@ PhysReader::GenericRecord PhysReader::ReadN(uint64_t const nbytes) {
     return {key, std::move(buffer)};
 }
 
-PhysReader::GenericRecord PhysReader::ReadAt(uint64_t const pos) {
+RecordReader::GenericRecord RecordReader::TryReadAt(int64_t const pos) {
     // set the cursor to read from pos
     source_->SeekTo(pos);
 
     // reuse
-    return std::move(this->Read());
+    return std::move(this->TryRead());
 }
 
-PhysReader::GenericRecord PhysReader::ReadNAt(uint64_t const pos, uint64_t const nbytes) {
+RecordReader::GenericRecord RecordReader::ReadNAt(int64_t const pos, int64_t const nbytes) {
     // set the cursor to read from
     source_->SeekTo(pos);
 
     return std::move(this->ReadN(nbytes));
 }
 
-PhysReader::GenericRecord PhysReader::ReadByKey(Key const& key) {
+RecordReader::GenericRecord RecordReader::ReadByKey(Key const& key) {
     return std::move(this->ReadNAt(key.seek_key_, key.key_bytes_));
 }
 
-PhysReader::FreeSegmentsRecord PhysReader::ReadFreeSegmentsRecord(
+/*
+RecordReader::FreeSegmentsRecord RecordReader::ReadFreeSegmentsRecord(
         SimpleFileHeader const& fh) {
     // get the record itself
     auto record = this->ReadNAt(fh.seek_free_, fh.nbytes_free_);
@@ -94,6 +102,31 @@ PhysReader::FreeSegmentsRecord PhysReader::ReadFreeSegmentsRecord(
         freeseg.DeserFrom(&ptr);
 
     return {record.first, std::move(freeSegments)};
+}
+*/
+
+void RecordWriter::WriteFileHeader(SimpleFileHeader const& fh) {
+    std::vector<uint8_t> buffer(100);
+    auto* ptr = buffer.data();
+    fh.SerTo(&ptr);
+
+    // FIXME: not sure if this complication is necessary
+    auto pos = sink_->Pos();
+    if (pos)
+        sink_->WriteAt(0, 100, (void*)buffer.data());
+    else 
+        sink_->Write(100, (void*)(buffer.data()));
+}
+
+void RecordWriter::Write(GenericRecord const& record) {
+    assert(record.first.seek_key_ == sink_->Pos());
+    sink_->Write(record.first.total_bytes_, (void*)record.second.data());
+}
+
+void RecordWriter::WriteAt(GenericRecord const& record) {
+    assert(record.first.total_bytes_ == record.second.size());
+    auto pos = record.first.seek_key_;
+    sink_->WriteAt(pos, record.first.total_bytes_, (void*)record.second.data());
 }
 
 }}}
