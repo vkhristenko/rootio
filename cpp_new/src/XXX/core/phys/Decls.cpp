@@ -7,37 +7,12 @@
 
 namespace XXX { namespace core { namespace phys {
 
-/*
-SimpleFileHeader RecordReader::ReadFileHeader() {
-    SimpleFileHeader fh;
-    std::vector<uint8_t> buffer(100);
-
-    // FIXME: not sure if this complication is necessary
-    auto pos = source_->Pos();
-    if (pos)
-        source_->ReadAt(0, 100, (void*)buffer.data());
-    else 
-        source_->Read(100, (void*)(buffer.data()));
-
-    // FIXME treat various statuses
-    auto* ptr = buffer.data();
-    if (std::strncmp((char const*)ptr, "root", 4)) {
-        std::cout << "*** not a root file ***" << std::endl;
-        assert(0);
-    }
-    ptr+=4;
-    fh.DeserFrom(&ptr);
-
-    return fh;
-}
-*/
-
 RecordReader::GenericRecord RecordReader::TryRead() {
     // first read the total bytes to read
     int32_t totalBytes;
     std::array<uint8_t, 4> tmp;
     source_->Read(4, (void*)tmp.data());
-    auto* tmpptr = tmp.data();
+    auto const* tmpptr = tmp.data();
     totalBytes = get_i32(&tmpptr);
 
     // empty record if 
@@ -57,7 +32,7 @@ RecordReader::GenericRecord RecordReader::TryRead() {
 
     // deserialize the physical key
     Key key; 
-    auto *ptr = buffer.data();
+    auto const*ptr = buffer.data();
     key.DeserFrom(&ptr);
 
     return {key, std::move(buffer)};
@@ -66,7 +41,7 @@ RecordReader::GenericRecord RecordReader::TryRead() {
 RecordReader::GenericRecord RecordReader::ReadN(int64_t const nbytes) {
     std::vector<uint8_t> buffer(nbytes);
     source_->Read(nbytes, (void*)buffer.data());
-    auto *ptr = buffer.data();
+    auto const *ptr = buffer.data();
 
     Key key;
     key.DeserFrom(&ptr);
@@ -91,37 +66,6 @@ RecordReader::GenericRecord RecordReader::ReadNAt(int64_t const pos, int64_t con
 RecordReader::GenericRecord RecordReader::ReadByKey(Key const& key) {
     return std::move(this->ReadNAt(key.seek_key_, key.key_bytes_));
 }
-
-/*
-RecordReader::FreeSegmentsRecord RecordReader::ReadFreeSegmentsRecord(
-        SimpleFileHeader const& fh) {
-    // get the record itself
-    auto record = this->ReadNAt(fh.seek_free_, fh.nbytes_free_);
-
-    // interpret the blob
-    auto *ptr = record.second.data() + record.first.key_bytes_;
-    std::vector<FreeSegment> freeSegments(fh.nfree_);
-    for (auto& freeseg : freeSegments)
-        freeseg.DeserFrom(&ptr);
-
-    return {record.first, std::move(freeSegments)};
-}
-*/
-
-/*
-void RecordWriter::WriteFileHeader(SimpleFileHeader const& fh) {
-    std::vector<uint8_t> buffer(100);
-    auto* ptr = buffer.data();
-    fh.SerTo(&ptr);
-
-    // FIXME: not sure if this complication is necessary
-    auto pos = sink_->Pos();
-    if (pos)
-        sink_->WriteAt(0, 100, (void*)buffer.data());
-    else 
-        sink_->Write(100, (void*)(buffer.data()));
-}
-*/
 
 void RecordWriter::Write(GenericRecord const& record) {
     assert(record.first.seek_key_ == sink_->Pos());

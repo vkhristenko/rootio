@@ -13,6 +13,8 @@
 #include <fcntl.h>
 #include <cstring>
 
+#include <vector>
+
 #include "XXX/core/common/aux.hpp"
 
 namespace XXX { namespace core { namespace phys {
@@ -132,7 +134,7 @@ struct Object {
         put_u32(buffer, bits_);
     }
 
-    void DeserFrom(uint8_t** buffer) {
+    void DeserFrom(uint8_t const** buffer) {
         version_ = get_version(buffer);
         id_ = get_u32(buffer);
         bits_ = get_u32(buffer);
@@ -159,7 +161,7 @@ struct FreeSegment {
         }
     }
 
-    void DeserFrom(uint8_t** buffer) {
+    void DeserFrom(uint8_t const** buffer) {
         version_ = get_version(buffer);
         begin_ = version_ > 1000 ? get_i64(buffer) : get_i32(buffer);
         end_ = version_ > 1000 ? get_i64(buffer) : get_i32(buffer);
@@ -177,7 +179,7 @@ struct Datime {
         put_u32(buffer, raw_);
     }
 
-    void DeserFrom(uint8_t **buffer) {
+    void DeserFrom(uint8_t const** buffer) {
         raw_ = get_u32(buffer);
     }
 
@@ -200,7 +202,7 @@ struct Key {
             put_i32(buffer, static_cast<int32_t>(seek_key_));
     }
 
-    void DeserFrom(uint8_t **buffer) {
+    void DeserFrom(uint8_t const** buffer) {
         total_bytes_ = get_i32(buffer);
         version_ = get_version(buffer);
         obj_bytes_ = get_i32(buffer);
@@ -242,7 +244,7 @@ struct SimpleFileHeader {
         }
     }
 
-    void DeserFrom(uint8_t **buffer) {
+    void DeserFrom(uint8_t const** buffer) {
         version_ = get_i32(buffer);
         begin_ = get_i32(buffer);
         if (version_ > 1000000) {
@@ -276,8 +278,6 @@ public:
 
     ~RecordWriter() {}
 
-    //void WriteFileHeader(SimpleFileHeader const&);
-
     void Write(GenericRecord const&);
 
     void TryWrite(GenericRecord const&);
@@ -294,15 +294,12 @@ protected:
 class RecordReader {
 public:
     using GenericRecord = std::pair<Key, std::vector<uint8_t>>;
-    using FreeSegmentsRecord = std::pair<Key, std::vector<FreeSegment>>;
 
-    explicit RecordReader(std::shared_ptr<SourceInterface> source) 
+    explicit RecordReader(std::shared_ptr<SourceInterface> const& source) 
         : source_{source} 
     {}
 
     ~RecordReader() {}
-
-    //SimpleFileHeader ReadFileHeader();
 
     GenericRecord TryRead();
 

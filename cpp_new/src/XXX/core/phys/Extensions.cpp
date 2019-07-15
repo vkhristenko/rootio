@@ -1,10 +1,8 @@
-#include "XXX/core/phys/Decls.hpp"
+#include <iostream>
 
-namespace tests { namespace extensions { namespace phys {
+#include "XXX/core/phys/Extensions.hpp"
 
-using namespace ::XXX::core::phys;
-
-using FileHeaderRecord = std::pair<SimpleFileHeader, std::vector<uint8_t>>;
+namespace XXX { namespace core { namespace phys {
 
 FileHeaderRecord readFileHeader(std::shared_ptr<SourceInterface> const& source) {
     SimpleFileHeader fh;
@@ -17,7 +15,7 @@ FileHeaderRecord readFileHeader(std::shared_ptr<SourceInterface> const& source) 
         source->Read(100, (void*)(buffer.data()));
 
     // FIXME treat various statuses
-    auto* ptr = buffer.data();
+    auto const* ptr = buffer.data();
     if (std::strncmp((char const*)ptr, "root", 4)) {
         std::cout << "*** not a root file ***" << std::endl;
         assert(0);
@@ -28,13 +26,24 @@ FileHeaderRecord readFileHeader(std::shared_ptr<SourceInterface> const& source) 
     return {fh, std::move(buffer)};
 }
 
-void writeFileHeader(std::shared_ptr<SinkInterface> sink, FileHeaderRecord const& fhr) {
+void writeFileHeader(std::shared_ptr<SinkInterface> const& sink, FileHeaderRecord const& fhr) {
     // FIXME: not sure if this complication is necessary
     auto const pos = sink->Pos();
     if (pos)
         sink->WriteAt(0, 100, (void*)fhr.second.data());
     else
         sink->Write(100, (void*)(fhr.second.data()));
+}
+
+std::vector<FreeSegment> parseFreeSegmentsRecord(
+        RecordReader::GenericRecord const& record,
+        SimpleFileHeader const& fh) {
+    std::vector<FreeSegment> freeSegments(fh.nfree_);
+    auto const *ptr = record.second.data();
+    for (auto& freeseg : freeSegments)
+        freeseg.DeserFrom(&ptr);
+
+    return freeSegments;
 }
 
 }}}

@@ -12,10 +12,9 @@
 #include <array>
 
 #include "XXX/core/phys/Decls.hpp"
-#include "extensions.hpp"
+#include "XXX/core/phys/Extensions.hpp"
 
 using namespace ::XXX::core::phys;
-using namespace ::tests::extensions::phys;
 
 void print_key(Key const& key) {
     printf("<<< key >>>\n");
