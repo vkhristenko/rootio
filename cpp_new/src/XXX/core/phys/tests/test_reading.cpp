@@ -12,8 +12,10 @@
 #include <array>
 
 #include "XXX/core/phys/Decls.hpp"
+#include "extensions.hpp"
 
 using namespace ::XXX::core::phys;
+using namespace ::tests::extensions::phys;
 
 void print_key(Key const& key) {
     printf("<<< key >>>\n");
@@ -57,11 +59,12 @@ int main(int argc, char* argv[]) {
 
     std::string infile{argv[1]};
 
-    RecordReader reader{new InputFile{infile}};
-    auto fh = reader.ReadFileHeader();
+    auto in = std::make_shared<InputFile>(infile);
+    RecordReader reader{in};
+    auto fhr = readFileHeader(in);
+    auto const& fh = fhr.first;
     print_file_header(fh);
     //auto freeSegments = reader.ReadFreeSegmentsRecord(fh);
-    print_file_header(fh);
 
     /*
     for (auto const& segment : freeSegments.second)

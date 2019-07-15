@@ -69,7 +69,7 @@ public:
             S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)}
     {}
 
-    ~OutputFile() override {}
+    ~OutputFile() override { this->Close(); }
 
     // FIXME should be the same for both interfaces
     void SeekTo(int64_t const pos) override { lseek(fd_, pos, SEEK_SET); }
@@ -91,7 +91,8 @@ public:
         std::vector<uint8_t> buffer(nbytes, 0);
         this->WriteAt(pos, nbytes, buffer.data());
     }
-   
+  
+protected:
     void Close() override { close(fd_); }
 
 protected:
@@ -105,7 +106,7 @@ public:
         , fd_{open(path_.c_str(), O_RDONLY, 0)}
     {}
 
-    ~InputFile() override {}
+    ~InputFile() override { this->Close(); }
 
     void SeekTo(int64_t const pos) override { lseek(fd_, pos, SEEK_SET); }
     int64_t Pos() const override { return lseek(fd_, 0, SEEK_CUR); }
@@ -117,6 +118,7 @@ public:
         this->Read(nbytes, data);
     }
 
+protected:
     void Close() override { close(fd_); }
 
 protected:
@@ -229,14 +231,14 @@ struct SimpleFileHeader {
         put_i32(buffer, begin_);
         if (version_ > 1000000) {
             put_i64(buffer, end_);
-            //put_i64(buffer, seek_free_);
-            //put_i32(buffer, nbytes_free_);
-            //put_i32(buffer, nfree_);
+            put_i64(buffer, seek_free_);
+            put_i32(buffer, nbytes_free_);
+            put_i32(buffer, nfree_);
         } else {
             put_i32(buffer, end_);
-            //put_i32(buffer, seek_free_);
-            //put_i32(buffer, nbytes_free_);
-            //put_i32(buffer, nfree_);
+            put_i32(buffer, seek_free_);
+            put_i32(buffer, nbytes_free_);
+            put_i32(buffer, nfree_);
         }
     }
 
@@ -245,42 +247,48 @@ struct SimpleFileHeader {
         begin_ = get_i32(buffer);
         if (version_ > 1000000) {
             end_ = get_i64(buffer);
-            //seek_free_ = get_i64(buffer);
-            //nbytes_free_ = get_i32(buffer);
-            //nfree_ = get_i32(buffer);
+            seek_free_ = get_i64(buffer);
+            nbytes_free_ = get_i32(buffer);
+            nfree_ = get_i32(buffer);
         } else {
             end_ = get_i32(buffer);
-            //seek_free_ = get_i32(buffer);
-            //nbytes_free_ = get_i32(buffer);
-            //nfree_ = get_i32(buffer);
+            seek_free_ = get_i32(buffer);
+            nbytes_free_ = get_i32(buffer);
+            nfree_ = get_i32(buffer);
         }
     }
 
     int32_t version_;
     int32_t begin_;
     int64_t end_;
-//    int64_t seek_free_;
-//    int32_t nbytes_free_;
-//    int32_t nfree_;
+    int64_t seek_free_;
+    int32_t nbytes_free_;
+    int32_t nfree_;
 };
 
 class RecordWriter {
 public:
     using GenericRecord = std::pair<Key, std::vector<uint8_t>>;
 
-    explicit RecordWriter(SinkInterface *sink) : sink_{sink} {}
+    explicit RecordWriter(std::shared_ptr<SinkInterface> const& sink) 
+        : sink_{sink} 
+    {}
 
-    ~RecordWriter() { sink_->Close(); delete sink_; }
+    ~RecordWriter() {}
 
-    void WriteFileHeader(SimpleFileHeader const&);
+    //void WriteFileHeader(SimpleFileHeader const&);
 
     void Write(GenericRecord const&);
+
+    void TryWrite(GenericRecord const&);
 
     // with seek + write
     void WriteAt(GenericRecord const&);
 
+    void TryWriteAt(int64_t const, GenericRecord const&);
+
 protected:
-    SinkInterface *sink_;
+    std::shared_ptr<SinkInterface> sink_;
 };
 
 class RecordReader {
@@ -288,11 +296,13 @@ public:
     using GenericRecord = std::pair<Key, std::vector<uint8_t>>;
     using FreeSegmentsRecord = std::pair<Key, std::vector<FreeSegment>>;
 
-    explicit RecordReader(SourceInterface *source) : source_{source} {}
+    explicit RecordReader(std::shared_ptr<SourceInterface> source) 
+        : source_{source} 
+    {}
 
-    ~RecordReader() { source_->Close(); delete source_; }
+    ~RecordReader() {}
 
-    SimpleFileHeader ReadFileHeader();
+    //SimpleFileHeader ReadFileHeader();
 
     GenericRecord TryRead();
 
@@ -307,7 +317,7 @@ public:
     //FreeSegmentsRecord ReadFreeSegmentsRecord(SimpleFileHeader const&);
 
 protected:
-    SourceInterface *source_;
+    std::shared_ptr<SourceInterface> source_;
 };
 
 }}}

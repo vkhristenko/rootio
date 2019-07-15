@@ -12,8 +12,10 @@
 #include <array>
 
 #include "XXX/core/phys/Decls.hpp"
+#include "extensions.hpp"
 
 using namespace ::XXX::core::phys;
+using namespace ::tests::extensions::phys;
 
 void print_key(Key const& key) {
     printf("<<< key >>>\n");
@@ -26,6 +28,10 @@ void print_key(Key const& key) {
 
 void print(Key const& key) {
     printf("Record At:%15llu Bytes:%10d\n", key.seek_key_, key.total_bytes_);
+}
+
+void print_empty_record(uint64_t location, uint64_t nbytes) {
+    printf("Free Segment At:%15llu Bytes:%10llu\n", location, nbytes);
 }
 
 void print(FreeSegment const& seg) {
@@ -47,26 +53,25 @@ void print_file_header(SimpleFileHeader const& fh) {
 
 int main(int argc, char* argv[]) {
     if (argc < 3) {
-        std::cout << "run with ./exec <path to input file> <path to output file>" << std::endl;
+        std::cout << "run with ./exec <path to in file> <path to out file>" << std::endl;
         exit(0);
     }
 
     std::string infile{argv[1]};
     std::string outfile{argv[2]};
 
-    RecordReader reader{new InputFile{infile}};
-    auto fh = reader.ReadFileHeader();
+    auto in = std::make_shared<InputFile>(infile);
+    RecordReader reader{in};
+    auto fhr = readFileHeader(in);
+    auto const& fh = fhr.first;
     print_file_header(fh);
     //auto freeSegments = reader.ReadFreeSegmentsRecord(fh);
-    print_file_header(fh);
 
-    auto out = new OutputFile{outfile};
+    // create a file based sink and write header record
+    auto out = std::make_shared<OutputFile>(outfile);
+    writeFileHeader(out, fhr);
+
     RecordWriter writer{out};
-
-    /*
-    for (auto const& segment : freeSegments.second)
-        printf("begin = %llu end = %llu\n", segment.begin_, segment.end_);
-    */
 
     int64_t location = fh.begin_;
     while (location < fh.end_) {
@@ -78,15 +83,25 @@ int main(int argc, char* argv[]) {
             print(*itCheck);
             location += (itCheck->end_ - itCheck->begin_ + 1);
             continue;
-        }*/
+        }
+        */
         
-        // read the record and advance location
+        // read the record
         auto record = reader.TryReadAt(location);
+
+        // write this record
+        writer.TryWriteAt(location, record);
+
+        // check if this is an empty record
+        if (record.first.total_bytes_ < 0) {
+            print_empty_record(location, std::abs(record.first.total_bytes_));
+            location += std::abs(record.first.total_bytes_);
+            continue;
+        }
+
+        // normal non-empty record
         print(record.first);
         location+=record.first.total_bytes_;
-
-        // transfer ownership
-        auto recordCopy = std::move(record);
     }
 
     return 0;
